@@ -201,7 +201,10 @@ void Uart::IrqHandler()
     {
       rxBuffer.store_char(rxRcv);
     }
-    nrfUart->TASKS_STARTRX = 0x1UL;
+    if (!rxBuffer.isFull())
+    {
+      nrfUart->TASKS_STARTRX = 0x1UL;
+    }
   }
 
   if (nrfUart->EVENTS_ENDTX)
@@ -223,7 +226,13 @@ int Uart::peek()
 
 int Uart::read()
 {
-  return rxBuffer.read_char();
+  const bool full = rxBuffer.isFull();
+  const int c = rxBuffer.read_char();
+  if (full)
+  {
+    nrfUart->TASKS_STARTRX = 0x1UL;
+  }
+  return c;
 }
 
 size_t Uart::write(uint8_t data)

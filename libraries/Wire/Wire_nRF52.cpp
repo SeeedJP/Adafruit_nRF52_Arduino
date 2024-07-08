@@ -31,7 +31,7 @@ extern "C" {
 
 #if defined(ARDUINO_Seeed_XIAO_nRF52840) || defined(ARDUINO_Seeed_XIAO_nRF52840_Sense)
 #include <Adafruit_TinyUSB.h> // for Serial
-#elif defined(ARDUINO_WIO_TRACKER_1110)
+#elif defined(ARDUINO_WIO_TRACKER_1110) || defined(ARDUINO_WIO_BG770A)
 #else
 #error "Unsupported board"
 #endif

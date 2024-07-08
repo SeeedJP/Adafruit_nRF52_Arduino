@@ -59,7 +59,7 @@ static void loop_task(void* arg)
   if(!Serial) Serial.begin(115200);
 #endif
 
-#elif defined(ARDUINO_WIO_TRACKER_1110)
+#elif defined(ARDUINO_WIO_TRACKER_1110) || defined(ARDUINO_WIO_BG770A)
 
 #if CFG_LOGGER == 0
   // If Serial is not begin(), call it to avoid hard fault

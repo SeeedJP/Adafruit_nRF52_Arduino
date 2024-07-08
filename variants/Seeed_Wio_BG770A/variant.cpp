@@ -1,6 +1,6 @@
 /*
  * variant.cpp
- * Copyright (C) 2023 Seeed K.K.
+ * Copyright (C) Seeed K.K.
  * MIT License
  */
 
@@ -66,18 +66,45 @@ void initVariant()
   // All pins output HIGH by default.
   // https://github.com/Seeed-Studio/Adafruit_nRF52_Arduino/blob/fab7d30a997a1dfeef9d1d59bfb549adda73815a/cores/nRF5/wiring.c#L65-L69
 
-  digitalWrite(PIN_GNSS_LNA, LOW);
-  pinMode(PIN_GNSS_LNA, OUTPUT);
-
-#if defined(POWER_SUPPLY_GROVE) && POWER_SUPPLY_GROVE == 1
-  digitalWrite(PIN_POWER_SUPPLY_GROVE, HIGH);
+  // BG770A
+#if defined(BOARD_VERSION_ES2)
+  digitalWrite(PIN_PWRKEY, LOW);
+  pinMode(PIN_PWRKEY, OUTPUT);
+#elif defined(BOARD_VERSION_1_0)
+  digitalWrite(PIN_PWRKEY, HIGH);
+  pinMode(PIN_PWRKEY, OUTPUT_S0D1);
+  digitalWrite(PIN_RESET_N, HIGH);
+  pinMode(PIN_RESET_N, OUTPUT_S0D1);
 #else
-  digitalWrite(PIN_POWER_SUPPLY_GROVE, LOW);
+#error "Unknown board version"
 #endif
-  pinMode(PIN_POWER_SUPPLY_GROVE, OUTPUT);
 
+  // FeRAM
+  digitalWrite(PIN_FERAM_CS, HIGH);
+  pinMode(PIN_FERAM_CS, OUTPUT);
+  digitalWrite(PIN_FERAM_WP, HIGH);
+  pinMode(PIN_FERAM_WP, OUTPUT);
+  digitalWrite(PIN_FERAM_HOLD, HIGH);
+  pinMode(PIN_FERAM_HOLD, OUTPUT);
+  digitalWrite(PIN_FERAM_SCK, LOW);
+  pinMode(PIN_FERAM_SCK, OUTPUT);
+  digitalWrite(PIN_FERAM_SI, LOW);
+  pinMode(PIN_FERAM_SI, OUTPUT);
+
+  // Power supply
+#ifdef BOARD_VERSION_ES2
+  digitalWrite(PIN_DCDC_MODE, LOW); // PFM/PWM mode
+  pinMode(PIN_DCDC_MODE, OUTPUT);
+  digitalWrite(PIN_VSYS_3V3_ENABLE, HIGH);
+  pinMode(PIN_VSYS_3V3_ENABLE, OUTPUT);
+#endif // BOARD_VERSION_ES2
+  digitalWrite(PIN_VGROVE_ENABLE, HIGH);
+  pinMode(PIN_VGROVE_ENABLE, OUTPUT);
+
+  // Builtin LEDs
   ledOff(LED_BUILTIN);
   pinMode(LED_BUILTIN, OUTPUT);
 
-  pinMode(PIN_BUTTON1, INPUT);
+  // Builtin buttons
+  pinMode(PIN_BUTTON1, INPUT_PULLUP);
 }

@@ -42,6 +42,7 @@ extern "C"{
 #define OUTPUT_D0H1           (0xC)
 #define OUTPUT_S0D1           (0xD)
 #define OUTPUT_H0D1           (0xE)
+#define NO_CONNECT            (0xF)
 
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
