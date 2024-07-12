@@ -111,7 +111,7 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 
 // Reset
 #ifdef BOARD_VERSION_1_0
-#define PIN_RESET_N             (31)            // DO(OC)
+#define PIN_RESET_N             (47)            // DO(OC)
 #endif // BOARD_VERSION_1_0
 
 // Main UART Interface
