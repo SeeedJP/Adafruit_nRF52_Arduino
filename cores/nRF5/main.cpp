@@ -133,10 +133,10 @@ void resumeLoop(void)
   }
 }
 
-#if CFG_LOGGER != 3
 extern "C"
 {
 
+#if CFG_LOGGER != 3
 // nanolib printf() retarget
 // Logger 0: Serial (CDC), 1 Serial1 (UART), 2 Segger RTT
 int _write (int fd, const void *buf, size_t count)
@@ -168,6 +168,14 @@ int _write (int fd, const void *buf, size_t count)
 
   return (int) ret;
 }
-
-}
+#else
+int _write (int fd, const void* buf, size_t count) { return -1; }
 #endif
+int _close(int fd) { return -1; }
+int _getpid(void) { return -1; }
+int	_isatty(int fd) { return 0; }
+long _lseek(int fd, long offset, int origin) { return -1; }
+int _read(int fd, void* buffer, size_t count) { return -1; }
+int	_fstat(int fd, struct _stat* buffer) { return -1; }
+int _kill(int pid, int sig) { return -1; }
+}
