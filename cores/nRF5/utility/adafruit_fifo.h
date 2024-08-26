@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <Arduino.h>
+#include <atomic>
 
 class Adafruit_FIFO
 {
@@ -48,9 +49,9 @@ class Adafruit_FIFO
              uint16_t _depth        ; ///< max items
     const    uint8_t  _item_size    ; ///< size of each item
              bool     _overwritable ; ///< Overwrite when full
-    volatile uint16_t _count        ; ///< number of items in queue
-    volatile uint16_t _wr_idx       ; ///< write pointer
-    volatile uint16_t _rd_idx       ; ///< read pointer
+    std::atomic<uint16_t> _count    ; ///< number of items in queue
+    std::atomic<uint16_t> _wr_idx   ; ///< write pointer
+    std::atomic<uint16_t> _rd_idx   ; ///< read pointer
 
     SemaphoreHandle_t _mutex;
 

@@ -109,7 +109,7 @@ void Adafruit_FIFO::_push(void const* item)
 
   if ( full() )
   {
-    _rd_idx = _wr_idx; // keep the full state (rd == wr && len = size)
+    _rd_idx.store(_wr_idx); // keep the full state (rd == wr && len = size)
   }
   else
   {
