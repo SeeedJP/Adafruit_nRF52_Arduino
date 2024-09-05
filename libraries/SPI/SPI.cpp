@@ -84,12 +84,12 @@ void SPIClass::begin()
     .sck_pin        = _uc_pinSCK,
     .mosi_pin       = _uc_pinMosi,
     .miso_pin       = _uc_pinMiso,
-    .ss_pin         = NRFX_SPIM_PIN_NOT_USED,
+    .ss_pin         = NRF_SPIM_PIN_NOT_CONNECTED,
     .ss_active_high = false,
     .irq_priority   = 3,
     .orc            = 0xFF,
     // default setting 4 Mhz, Mode 0, MSB first
-    .frequency      = NRF_SPIM_FREQ_4M,
+    .frequency      = NRFX_MHZ_TO_HZ(4),
     .mode           = NRF_SPIM_MODE_0,
     .bit_order      = NRF_SPIM_BIT_ORDER_MSB_FIRST,
   };
