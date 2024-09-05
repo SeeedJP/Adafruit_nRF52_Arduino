@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2017 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -53,7 +55,7 @@ extern "C" {
 
 // Uncomment this line to use the standard MDK way of binding IRQ handlers
 // at linking time.
-#include <soc/nrfx_irqs.h>
+//#include <soc/nrfx_irqs.h>
 
 //------------------------------------------------------------------------------
 
@@ -79,25 +81,14 @@ extern "C" {
  * @param irq_number IRQ number.
  * @param priority   Priority to be set.
  */
-#define NRFX_IRQ_PRIORITY_SET(irq_number, priority) _NRFX_IRQ_PRIORITY_SET(irq_number, priority)
-static inline void _NRFX_IRQ_PRIORITY_SET(IRQn_Type irq_number,
-                                          uint8_t   priority)
-{
-    NRFX_ASSERT(INTERRUPT_PRIORITY_IS_VALID(priority));
-    NVIC_SetPriority(irq_number, priority);
-}
+#define NRFX_IRQ_PRIORITY_SET(irq_number, priority)
 
 /**
  * @brief Macro for enabling a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_ENABLE(irq_number)  _NRFX_IRQ_ENABLE(irq_number)
-static inline void _NRFX_IRQ_ENABLE(IRQn_Type irq_number)
-{
-    NVIC_ClearPendingIRQ(irq_number);
-    NVIC_EnableIRQ(irq_number);
-}
+#define NRFX_IRQ_ENABLE(irq_number)
 
 /**
  * @brief Macro for checking if a specific IRQ is enabled.
@@ -107,44 +98,28 @@ static inline void _NRFX_IRQ_ENABLE(IRQn_Type irq_number)
  * @retval true  If the IRQ is enabled.
  * @retval false Otherwise.
  */
-#define NRFX_IRQ_IS_ENABLED(irq_number)  _NRFX_IRQ_IS_ENABLED(irq_number)
-static inline bool _NRFX_IRQ_IS_ENABLED(IRQn_Type irq_number)
-{
-    return 0 != (NVIC->ISER[irq_number / 32] & (1UL << (irq_number % 32)));
-}
+#define NRFX_IRQ_IS_ENABLED(irq_number)
 
 /**
  * @brief Macro for disabling a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_DISABLE(irq_number)  _NRFX_IRQ_DISABLE(irq_number)
-static inline void _NRFX_IRQ_DISABLE(IRQn_Type irq_number)
-{
-    NVIC_DisableIRQ(irq_number);
-}
+#define NRFX_IRQ_DISABLE(irq_number)
 
 /**
  * @brief Macro for setting a specific IRQ as pending.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_PENDING_SET(irq_number) _NRFX_IRQ_PENDING_SET(irq_number)
-static inline void _NRFX_IRQ_PENDING_SET(IRQn_Type irq_number)
-{
-    NVIC_SetPendingIRQ(irq_number);
-}
+#define NRFX_IRQ_PENDING_SET(irq_number)
 
 /**
  * @brief Macro for clearing the pending status of a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_PENDING_CLEAR(irq_number) _NRFX_IRQ_PENDING_CLEAR(irq_number)
-static inline void _NRFX_IRQ_PENDING_CLEAR(IRQn_Type irq_number)
-{
-    NVIC_ClearPendingIRQ(irq_number);
-}
+#define NRFX_IRQ_PENDING_CLEAR(irq_number)
 
 /**
  * @brief Macro for checking the pending status of a specific IRQ.
@@ -152,11 +127,7 @@ static inline void _NRFX_IRQ_PENDING_CLEAR(IRQn_Type irq_number)
  * @retval true  If the IRQ is pending.
  * @retval false Otherwise.
  */
-#define NRFX_IRQ_IS_PENDING(irq_number) _NRFX_IRQ_IS_PENDING(irq_number)
-static inline bool _NRFX_IRQ_IS_PENDING(IRQn_Type irq_number)
-{
-    return (NVIC_GetPendingIRQ(irq_number) == 1);
-}
+#define NRFX_IRQ_IS_PENDING(irq_number)
 
 /** @brief Macro for entering into a critical section. */
 #define NRFX_CRITICAL_SECTION_ENTER()
@@ -179,8 +150,7 @@ static inline bool _NRFX_IRQ_IS_PENDING(IRQn_Type irq_number)
  *
  * @param us_time Number of microseconds to wait.
  */
-#include <soc/nrfx_coredep.h>
-#define NRFX_DELAY_US(us_time)    nrfx_coredep_delay_us(us_time)
+#define NRFX_DELAY_US(us_time)
 
 //------------------------------------------------------------------------------
 
@@ -251,6 +221,40 @@ static inline bool _NRFX_IRQ_IS_PENDING(IRQn_Type irq_number)
  */
 #define NRFX_ATOMIC_FETCH_SUB(p_data, value)
 
+/**
+ * @brief Macro for running compare and swap on an atomic object.
+ *
+ * Value is updated to the new value only if it previously equaled old value.
+ *
+ * @param[in,out] p_data    Atomic memory pointer.
+ * @param[in]     old_value Expected old value.
+ * @param[in]     new_value New value.
+ *
+ * @retval true  If value was updated.
+ * @retval false If value was not updated because location was not equal to @p old_value.
+ */
+#define NRFX_ATOMIC_CAS(p_data, old_value, new_value)
+
+/**
+ * @brief Macro for counting leading zeros.
+ *
+ * @param[in] value A word value.
+ *
+ * @return Number of leading 0-bits in @p value, starting at the most significant bit position.
+ *         If x is 0, the result is undefined.
+ */
+#define NRFX_CLZ(value)
+
+/**
+ * @brief Macro for counting trailing zeros.
+ *
+ * @param[in] value A word value.
+ *
+ * @return Number of trailing 0-bits in @p value, starting at the least significant bit position.
+ *         If x is 0, the result is undefined.
+ */
+#define NRFX_CTZ(value)
+
 //------------------------------------------------------------------------------
 
 /**
@@ -263,23 +267,68 @@ static inline bool _NRFX_IRQ_IS_PENDING(IRQn_Type irq_number)
 
 //------------------------------------------------------------------------------
 
+/**
+ * @brief When set to a non-zero value, this macro specifies that inside HALs
+ *        the event registers are read back after clearing, on devices that
+ *        otherwise could defer the actual register modification.
+ */
+#define NRFX_EVENT_READBACK_ENABLED 1
+
+//------------------------------------------------------------------------------
+
+/**
+ * @brief Macro for writing back cache lines associated with the specified buffer.
+ *
+ * @note Macro should be empty if data cache is disabled or not present.
+ *
+ * @param[in] p_buffer Pointer to the buffer.
+ * @param[in] size     Size of the buffer.
+ */
+#define NRFY_CACHE_WB(p_buffer, size)
+
+/**
+ * @brief Macro for invalidating cache lines associated with the specified buffer.
+ *
+ * @note Macro should be empty if data cache is disabled or not present.
+ *
+ * @param[in] p_buffer Pointer to the buffer.
+ * @param[in] size     Size of the buffer.
+ */
+#define NRFY_CACHE_INV(p_buffer, size)
+
+/**
+ * @brief Macro for writing back and invalidating cache lines associated with
+ *        the specified buffer.
+ *
+ * @note Macro should be empty if data cache is disabled or not present.
+ *
+ * @param[in] p_buffer Pointer to the buffer.
+ * @param[in] size     Size of the buffer.
+ */
+#define NRFY_CACHE_WBINV(p_buffer, size)
+
+//------------------------------------------------------------------------------
+
 /** @brief Bitmask that defines DPPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_CHANNELS_USED  0
+#define NRFX_DPPI_CHANNELS_USED   0
 
 /** @brief Bitmask that defines DPPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_GROUPS_USED    0
+#define NRFX_DPPI_GROUPS_USED     0
 
 /** @brief Bitmask that defines PPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_CHANNELS_USED  0
+#define NRFX_PPI_CHANNELS_USED    0
 
 /** @brief Bitmask that defines PPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_GROUPS_USED    0
+#define NRFX_PPI_GROUPS_USED      0
+
+/** @brief Bitmask that defines GPIOTE channels that are reserved for use outside of the nrfx library. */
+#define NRFX_GPIOTE_CHANNELS_USED 0
 
 /** @brief Bitmask that defines EGU instances that are reserved for use outside of the nrfx library. */
-#define NRFX_EGUS_USED          0
+#define NRFX_EGUS_USED            0
 
 /** @brief Bitmask that defines TIMER instances that are reserved for use outside of the nrfx library. */
-#define NRFX_TIMERS_USED        0
+#define NRFX_TIMERS_USED          0
 
 /** @} */
 

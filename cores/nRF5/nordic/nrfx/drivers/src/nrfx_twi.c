@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2015 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +35,7 @@
 
 #if NRFX_CHECK(NRFX_TWI_ENABLED)
 
-#if !(NRFX_CHECK(NRFX_TWI0_ENABLED) || NRFX_CHECK(NRFX_TWI1_ENABLED))
+#if !NRFX_FEATURE_PRESENT(NRFX_TWI, _ENABLED)
 #error "No enabled TWI instances. Check <nrfx_config.h>."
 #endif
 
@@ -107,6 +109,7 @@ typedef struct
     bool                    repeated;
     size_t                  bytes_transferred;
     bool                    hold_bus_uninit;
+    bool                    skip_gpio_cfg;
 } twi_control_block_t;
 
 static twi_control_block_t m_cb[NRFX_TWI_ENABLED_COUNT];
@@ -153,19 +156,40 @@ static bool xfer_completeness_check(NRF_TWI_Type * p_twi, twi_control_block_t co
     }
 }
 
+static void twi_configure(nrfx_twi_t const *        p_instance,
+                          nrfx_twi_config_t const * p_config)
+{
+    if (!p_config->skip_psel_cfg)
+    {
+        nrf_twi_pins_set(p_instance->p_twi, p_config->scl, p_config->sda);
+    }
+    nrf_twi_frequency_set(p_instance->p_twi, p_config->frequency);
+
+    if (m_cb[p_instance->drv_inst_idx].handler)
+    {
+        NRFX_IRQ_PRIORITY_SET(nrfx_get_irq_number(p_instance->p_twi),
+                              p_config->interrupt_priority);
+        NRFX_IRQ_ENABLE(nrfx_get_irq_number(p_instance->p_twi));
+    }
+}
+
 nrfx_err_t nrfx_twi_init(nrfx_twi_t const *        p_instance,
                          nrfx_twi_config_t const * p_config,
                          nrfx_twi_evt_handler_t    event_handler,
                          void *                    p_context)
 {
     NRFX_ASSERT(p_config);
-    NRFX_ASSERT(p_config->scl != p_config->sda);
+
     twi_control_block_t * p_cb  = &m_cb[p_instance->drv_inst_idx];
     nrfx_err_t err_code;
 
     if (p_cb->state != NRFX_DRV_STATE_UNINITIALIZED)
     {
+#if NRFX_API_VER_AT_LEAST(3, 2, 0)
+        err_code = NRFX_ERROR_ALREADY;
+#else
         err_code = NRFX_ERROR_INVALID_STATE;
+#endif
         NRFX_LOG_WARNING("Function: %s, error code: %s.",
                          __func__,
                          NRFX_LOG_ERROR_STRING_GET(err_code));
@@ -174,12 +198,7 @@ nrfx_err_t nrfx_twi_init(nrfx_twi_t const *        p_instance,
 
 #if NRFX_CHECK(NRFX_PRS_ENABLED)
     static nrfx_irq_handler_t const irq_handlers[NRFX_TWI_ENABLED_COUNT] = {
-        #if NRFX_CHECK(NRFX_TWI0_ENABLED)
-        nrfx_twi_0_irq_handler,
-        #endif
-        #if NRFX_CHECK(NRFX_TWI1_ENABLED)
-        nrfx_twi_1_irq_handler,
-        #endif
+        NRFX_INSTANCE_IRQ_HANDLERS_LIST(TWI, twi)
     };
     if (nrfx_prs_acquire(p_instance->p_twi,
             irq_handlers[p_instance->drv_inst_idx]) != NRFX_SUCCESS)
@@ -198,25 +217,23 @@ nrfx_err_t nrfx_twi_init(nrfx_twi_t const *        p_instance,
     p_cb->prev_suspend    = TWI_NO_SUSPEND;
     p_cb->repeated        = false;
     p_cb->busy            = false;
-    p_cb->hold_bus_uninit = p_config->hold_bus_uninit;
 
-    /* To secure correct signal levels on the pins used by the TWI
-       master when the system is in OFF mode, and when the TWI master is
-       disabled, these pins must be configured in the GPIO peripheral.
-    */
-    TWI_PIN_INIT(p_config->scl);
-    TWI_PIN_INIT(p_config->sda);
-
-    NRF_TWI_Type * p_twi = p_instance->p_twi;
-    nrf_twi_pins_set(p_twi, p_config->scl, p_config->sda);
-    nrf_twi_frequency_set(p_twi,
-        (nrf_twi_frequency_t)p_config->frequency);
-
-    if (p_cb->handler)
+    if (p_config)
     {
-        NRFX_IRQ_PRIORITY_SET(nrfx_get_irq_number(p_instance->p_twi),
-            p_config->interrupt_priority);
-        NRFX_IRQ_ENABLE(nrfx_get_irq_number(p_instance->p_twi));
+        p_cb->hold_bus_uninit = p_config->hold_bus_uninit;
+        p_cb->skip_gpio_cfg   = p_config->skip_gpio_cfg;
+
+        /* To secure correct signal levels on the pins used by the TWI
+           master when the system is in OFF mode, and when the TWI master is
+           disabled, these pins must be configured in the GPIO peripheral.
+        */
+        if (!p_config->skip_gpio_cfg)
+        {
+            NRFX_ASSERT(p_config->scl != p_config->sda);
+            TWI_PIN_INIT(p_config->scl);
+            TWI_PIN_INIT(p_config->sda);
+        }
+        twi_configure(p_instance, p_config);
     }
 
     p_cb->state = NRFX_DRV_STATE_INITIALIZED;
@@ -226,9 +243,32 @@ nrfx_err_t nrfx_twi_init(nrfx_twi_t const *        p_instance,
     return err_code;
 }
 
+nrfx_err_t nrfx_twi_reconfigure(nrfx_twi_t const *        p_instance,
+                                nrfx_twi_config_t const * p_config)
+{
+    NRFX_ASSERT(p_config);
+
+    twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
+    if (p_cb->state == NRFX_DRV_STATE_UNINITIALIZED)
+    {
+        return NRFX_ERROR_INVALID_STATE;
+    }
+    if (p_cb->busy)
+    {
+        return NRFX_ERROR_BUSY;
+    }
+    nrf_twi_disable(p_instance->p_twi);
+    p_cb->hold_bus_uninit = p_config->hold_bus_uninit;
+    twi_configure(p_instance, p_config);
+    nrf_twi_enable(p_instance->p_twi);
+    return NRFX_SUCCESS;
+}
+
 void nrfx_twi_uninit(nrfx_twi_t const * p_instance)
 {
     twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
     NRFX_ASSERT(p_cb->state != NRFX_DRV_STATE_UNINITIALIZED);
 
     if (p_cb->handler)
@@ -241,7 +281,7 @@ void nrfx_twi_uninit(nrfx_twi_t const * p_instance)
     nrfx_prs_release(p_instance->p_twi);
 #endif
 
-    if (!p_cb->hold_bus_uninit)
+    if (!p_cb->skip_gpio_cfg && !p_cb->hold_bus_uninit)
     {
         nrf_gpio_cfg_default(nrf_twi_scl_pin_get(p_instance->p_twi));
         nrf_gpio_cfg_default(nrf_twi_sda_pin_get(p_instance->p_twi));
@@ -251,9 +291,17 @@ void nrfx_twi_uninit(nrfx_twi_t const * p_instance)
     NRFX_LOG_INFO("Instance uninitialized: %d.", p_instance->drv_inst_idx);
 }
 
+bool nrfx_twi_init_check(nrfx_twi_t const * p_instance)
+{
+    twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
+    return (p_cb->state != NRFX_DRV_STATE_UNINITIALIZED);
+}
+
 void nrfx_twi_enable(nrfx_twi_t const * p_instance)
 {
     twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
     NRFX_ASSERT(p_cb->state == NRFX_DRV_STATE_INITIALIZED);
 
     NRF_TWI_Type * p_twi = p_instance->p_twi;
@@ -266,6 +314,7 @@ void nrfx_twi_enable(nrfx_twi_t const * p_instance)
 void nrfx_twi_disable(nrfx_twi_t const * p_instance)
 {
     twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
     NRFX_ASSERT(p_cb->state != NRFX_DRV_STATE_UNINITIALIZED);
 
     NRF_TWI_Type * p_twi = p_instance->p_twi;
@@ -274,6 +323,7 @@ void nrfx_twi_disable(nrfx_twi_t const * p_instance)
     nrf_twi_disable(p_twi);
 
     p_cb->state = NRFX_DRV_STATE_INITIALIZED;
+    p_cb->busy = false;
     NRFX_LOG_INFO("Instance disabled: %d.", p_instance->drv_inst_idx);
 }
 
@@ -564,7 +614,6 @@ static nrfx_err_t twi_xfer(NRF_TWI_Type               * p_twi,
                            nrfx_twi_xfer_desc_t const * p_xfer_desc,
                            uint32_t                     flags)
 {
-
     nrfx_err_t err_code = NRFX_SUCCESS;
 
     if ((p_cb->prev_suspend == TWI_SUSPEND_TX) && (p_xfer_desc->type == NRFX_TWI_XFER_RX))
@@ -622,6 +671,8 @@ static nrfx_err_t twi_xfer(NRF_TWI_Type               * p_twi,
 bool nrfx_twi_is_busy(nrfx_twi_t const * p_instance)
 {
     twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+    NRFX_ASSERT(p_cb->state != NRFX_DRV_STATE_UNINITIALIZED);
+
     return p_cb->busy;
 }
 
@@ -629,9 +680,12 @@ nrfx_err_t nrfx_twi_xfer(nrfx_twi_t const *           p_instance,
                          nrfx_twi_xfer_desc_t const * p_xfer_desc,
                          uint32_t                     flags)
 {
-
     nrfx_err_t err_code = NRFX_SUCCESS;
     twi_control_block_t * p_cb = &m_cb[p_instance->drv_inst_idx];
+
+    NRFX_ASSERT(p_cb->state == NRFX_DRV_STATE_POWERED_ON);
+    NRFX_ASSERT(p_xfer_desc->p_primary_buf != NULL || p_xfer_desc->primary_length == 0);
+    NRFX_ASSERT(p_xfer_desc->p_secondary_buf != NULL || p_xfer_desc->secondary_length == 0);
 
     // TXRX and TXTX transfers are supported only in non-blocking mode.
     NRFX_ASSERT( !((p_cb->handler == NULL) && (p_xfer_desc->type == NRFX_TWI_XFER_TXRX)));
@@ -657,15 +711,19 @@ nrfx_err_t nrfx_twi_xfer(nrfx_twi_t const *           p_instance,
 
 size_t nrfx_twi_data_count_get(nrfx_twi_t const * p_instance)
 {
+    NRFX_ASSERT(m_cb[p_instance->drv_inst_idx].state != NRFX_DRV_STATE_UNINITIALIZED);
+
     return m_cb[p_instance->drv_inst_idx].bytes_transferred;
 }
 
 uint32_t nrfx_twi_stopped_event_get(nrfx_twi_t const * p_instance)
 {
+    NRFX_ASSERT(m_cb[p_instance->drv_inst_idx].state != NRFX_DRV_STATE_UNINITIALIZED);
+
     return nrf_twi_event_address_get(p_instance->p_twi, NRF_TWI_EVENT_STOPPED);
 }
 
-static void twi_irq_handler(NRF_TWI_Type * p_twi, twi_control_block_t * p_cb)
+static void irq_handler(NRF_TWI_Type * p_twi, twi_control_block_t * p_cb)
 {
     NRFX_ASSERT(p_cb->handler);
 
@@ -735,21 +793,8 @@ static void twi_irq_handler(NRF_TWI_Type * p_twi, twi_control_block_t * p_cb)
             p_cb->handler(&event, p_cb->p_context);
         }
     }
-
 }
 
-#if NRFX_CHECK(NRFX_TWI0_ENABLED)
-void nrfx_twi_0_irq_handler(void)
-{
-    twi_irq_handler(NRF_TWI0, &m_cb[NRFX_TWI0_INST_IDX]);
-}
-#endif
-
-#if NRFX_CHECK(NRFX_TWI1_ENABLED)
-void nrfx_twi_1_irq_handler(void)
-{
-    twi_irq_handler(NRF_TWI1, &m_cb[NRFX_TWI1_INST_IDX]);
-}
-#endif
+NRFX_INSTANCE_IRQ_HANDLERS(TWI, twi)
 
 #endif // NRFX_CHECK(NRFX_TWI_ENABLED)

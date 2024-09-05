@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2015 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -55,14 +57,14 @@ extern "C" {
 #endif
 
 #if defined(CLOCK_INTENSET_DONE_Msk) || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of the Low Frequency Clock calibration. */
+/** @brief Symbol indicating whether the Low Frequency Clock calibration is present. */
 #define NRF_CLOCK_HAS_CALIBRATION 1
 #else
 #define NRF_CLOCK_HAS_CALIBRATION 0
 #endif
 
 #if defined(CLOCK_CTIV_CTIV_Msk) || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of the Low Frequency Clock calibration timer. */
+/** @brief Symbol indicating whether the Low Frequency Clock calibration timer is present. */
 #define NRF_CLOCK_HAS_CALIBRATION_TIMER 1
 #else
 #define NRF_CLOCK_HAS_CALIBRATION_TIMER 0
@@ -70,7 +72,7 @@ extern "C" {
 
 #if (defined(CLOCK_INTENSET_HFCLK192MSTARTED_Msk) && !defined(NRF5340_XXAA_NETWORK)) \
     || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of the 192 MHz clock. */
+/** @brief Symbol indicating whether the 192 MHz clock is present. */
 #define NRF_CLOCK_HAS_HFCLK192M 1
 #else
 #define NRF_CLOCK_HAS_HFCLK192M 0
@@ -78,32 +80,129 @@ extern "C" {
 
 #if (defined(CLOCK_INTENSET_HFCLKAUDIOSTARTED_Msk) && !defined(NRF5340_XXAA_NETWORK)) \
     || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of the Audio clock. */
+/** @brief Symbol indicating whether the Audio clock is present. */
 #define NRF_CLOCK_HAS_HFCLKAUDIO 1
 #else
 #define NRF_CLOCK_HAS_HFCLKAUDIO 0
 #endif
 
-#if (defined(CLOCK_HFCLKCTRL_HCLK_Msk) && !defined(NRF5340_XXAA_NETWORK)) \
+#if (defined(CLOCK_HFCLKCTRL_HCLK_Div1) && !defined(NRF5340_XXAA_NETWORK)) \
     || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of HFCLK frequency configuration. */
+/** @brief Symbol indicating whether the HFCLK frequency configuration is present. */
 #define NRF_CLOCK_HAS_HFCLK_DIV 1
 #else
 #define NRF_CLOCK_HAS_HFCLK_DIV 0
 #endif
 
-#if defined(CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk) || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of ALWAYSRUN registers. */
-#define NRF_CLOCK_HAS_ALWAYSRUN 1
+#if defined(CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk) || defined(CLOCK_LFCLK_ALWAYSRUN_ALWAYSRUN_Msk) || \
+    defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether the ALWAYSRUN register is present for LFCLK. */
+#define NRF_CLOCK_HAS_LFCLK_ALWAYSRUN 1
 #else
-#define NRF_CLOCK_HAS_ALWAYSRUN 0
+#define NRF_CLOCK_HAS_LFCLK_ALWAYSRUN 0
+#endif
+
+#if defined(CLOCK_HFCLKALWAYSRUN_ALWAYSRUN_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether the ALWAYSRUN register is present for HFCLK. */
+#define NRF_CLOCK_HAS_HFCLK_ALWAYSRUN 1
+#else
+#define NRF_CLOCK_HAS_HFCLK_ALWAYSRUN 0
 #endif
 
 #if defined(CLOCK_HFCLKSRC_SRC_Msk) || defined(__NRFX_DOXYGEN__)
-/** @brief Presence of HFCLKSRC register. */
+/** @brief Symbol indicating whether the HFCLKSRC register is present. */
 #define NRF_CLOCK_HAS_HFCLKSRC 1
 #else
 #define NRF_CLOCK_HAS_HFCLKSRC 0
+#endif
+
+#if defined(CLOCK_TASKS_PLLSTART_TASKS_PLLSTART_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether the PLL section is present. */
+#define NRF_CLOCK_HAS_PLL 1
+#else
+#define NRF_CLOCK_HAS_PLL 0
+#endif
+
+#if defined(CLOCK_TASKS_XOSTART_TASKS_XOSTART_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether XO registers are present. */
+#define NRF_CLOCK_HAS_XO 1
+#else
+#define NRF_CLOCK_HAS_XO 0
+#endif
+
+#if defined(CLOCK_LFCLK_SRC_SRC_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether the CLOCK type contains LFCLK subtype. */
+#define NRF_CLOCK_HAS_LFCLK_TYPE 1
+#else
+#define NRF_CLOCK_HAS_LFCLK_TYPE 0
+#endif
+
+#if NRF_CLOCK_HAS_LFCLK_TYPE
+#define NRF_CLOCK_LFCLKRUN_STATUS_NotTriggered CLOCK_LFCLK_RUN_STATUS_NotTriggered /**< Task LFCLKSTART/HFCLKSTART has not been triggered definiton. */
+#define NRF_CLOCK_LFCLKRUN_STATUS_Triggered    CLOCK_LFCLK_RUN_STATUS_Triggered    /**< Task LFCLKSTART/HFCLKSTART has been triggered. */
+#define NRF_CLOCK_INTENSET_LFCLKSTARTED_Msk    CLOCK_INTENSET_LFCLKSTARTED_Msk     /**< Interrupt on LFCLKSTARTED event mask definition. */
+#define NRF_LFCLKSRCCOPY                       LFCLK.SRCCOPY                       /**< LF clock SRCCOPY register definition. */
+#define NRF_LFCLKRUN                           LFCLK.RUN                           /**< LF clock RUN register definition. */
+#define NRF_LFCLKSTAT                          LFCLK.STAT                          /**< LF clock STAT register definition. */
+#define NRF_LFCLKSRC                           LFCLK.SRC                           /**< LF clock SRC register definition. */
+#define NRF_LFCLKALWAYSRUN                     LFCLK.ALWAYSRUN                     /**< LF clock ALWAYSRUN register definition. */
+#define NRF_CLOCK_LFCLKSRCCOPY_SRC_Msk         CLOCK_LFCLK_SRCCOPY_SRC_Msk         /**< LF clock SRCCOPY status mask definition. */
+#define NRF_CLOCK_LFCLKSRCCOPY_SRC_Pos         CLOCK_LFCLK_SRCCOPY_SRC_Pos         /**< LF clock SRCCOPY status position definition. */
+#define NRF_CLOCK_LFCLKRUN_STATUS_Msk          CLOCK_LFCLK_RUN_STATUS_Msk          /**< LF clock RUN status mask definition. */
+#define NRF_CLOCK_LFCLKRUN_STATUS_Pos          CLOCK_LFCLK_RUN_STATUS_Pos          /**< LF clock RUN status position definition. */
+#define NRF_CLOCK_LFCLKSTAT_SRC_Msk            CLOCK_LFCLK_STAT_SRC_Msk            /**< LF clock STAT source mask definition. */
+#define NRF_CLOCK_LFCLKSTAT_SRC_Pos            CLOCK_LFCLK_STAT_SRC_Pos            /**< LF clock STAT source position definition. */
+#define NRF_CLOCK_LFCLKSTAT_STATE_Msk          CLOCK_LFCLK_STAT_STATE_Msk          /**< LF clock STAT state mask definition. */
+#define NRF_CLOCK_LFCLKSTAT_STATE_Pos          CLOCK_LFCLK_STAT_STATE_Pos          /**< LF clock STAT state position definition. */
+#define NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Msk  CLOCK_LFCLK_STAT_ALWAYSRUNNING_Msk  /**< LF clock STAT alwaysrunning position definition. */
+#define NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Pos  CLOCK_LFCLK_STAT_ALWAYSRUNNING_Pos  /**< LF clock STAT alwaysrunning mask definition. */
+#define NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk CLOCK_LFCLK_ALWAYSRUN_ALWAYSRUN_Msk /**< LF clock ALWAYSRUN position definition. */
+#define NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos CLOCK_LFCLK_ALWAYSRUN_ALWAYSRUN_Pos /**< LF clock ALWAYSRUN mask definition. */
+#else
+#define NRF_CLOCK_LFCLKRUN_STATUS_NotTriggered CLOCK_LFCLKRUN_STATUS_NotTriggered
+#define NRF_CLOCK_LFCLKRUN_STATUS_Triggered    CLOCK_LFCLKRUN_STATUS_Triggered
+#define NRF_CLOCK_INTENSET_LFCLKSTARTED_Msk    CLOCK_INTENSET_LFCLKSTARTED_Msk
+#define NRF_LFCLKSRCCOPY                       LFCLKSRCCOPY
+#define NRF_LFCLKRUN                           LFCLKRUN
+#define NRF_LFCLKSTAT                          LFCLKSTAT
+#define NRF_LFCLKSRC                           LFCLKSRC
+#define NRF_LFCLKALWAYSRUN                     LFCLKALWAYSRUN
+#define NRF_CLOCK_LFCLKSRCCOPY_SRC_Msk         CLOCK_LFCLKSRCCOPY_SRC_Msk
+#define NRF_CLOCK_LFCLKSRCCOPY_SRC_Pos         CLOCK_LFCLKSRCCOPY_SRC_Pos
+#define NRF_CLOCK_LFCLKRUN_STATUS_Msk          CLOCK_LFCLKRUN_STATUS_Msk
+#define NRF_CLOCK_LFCLKRUN_STATUS_Pos          CLOCK_LFCLKRUN_STATUS_Pos
+#define NRF_CLOCK_LFCLKSTAT_SRC_Msk            CLOCK_LFCLKSTAT_SRC_Msk
+#define NRF_CLOCK_LFCLKSTAT_SRC_Pos            CLOCK_LFCLKSTAT_SRC_Pos
+#define NRF_CLOCK_LFCLKSTAT_STATE_Msk          CLOCK_LFCLKSTAT_STATE_Msk
+#define NRF_CLOCK_LFCLKSTAT_STATE_Pos          CLOCK_LFCLKSTAT_STATE_Pos
+#define NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Msk  CLOCK_LFCLKSTAT_ALWAYSRUNNING_Msk
+#define NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Pos  CLOCK_LFCLKSTAT_ALWAYSRUNNING_Pos
+#define NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk
+#define NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos
+#endif
+
+#if NRF_CLOCK_HAS_XO
+#define NRF_CLOCK_INTENSET_HFCLKSTARTED_Msk CLOCK_INTEN_XOSTARTED_Msk /**< HF clock bit mask in interrupt register. */
+#define NRF_TASKS_HFCLKSTART                TASKS_XOSTART             /**< Task HF clock start definition. */
+#define NRF_TASKS_HFCLKSTOP                 TASKS_XOSTOP              /**< Task HF clock stop definition. */
+#define NRF_EVENTS_HFCLKSTARTED             EVENTS_XOSTARTED          /**< Event HF clock startrd definition. */
+#define NRF_HFCLKRUN                        XO.RUN                    /**< HF clock RUN register definition. */
+#define NRF_HFCLKSTAT                       XO.STAT                   /**< HF clock STAT register definition. */
+#define NRF_CLOCK_HFCLKRUN_STATUS_Msk       CLOCK_XO_RUN_STATUS_Msk   /**< HF clock RUN status mask definition. */
+#define NRF_CLOCK_HFCLKRUN_STATUS_Pos       CLOCK_XO_RUN_STATUS_Pos   /**< HF clock RUN status position definition. */
+#define NRF_CLOCK_HFCLKSTAT_STATE_Msk       CLOCK_XO_STAT_STATE_Msk   /**< HF clock STAT state mask definition. */
+#define NRF_CLOCK_HFCLKSTAT_STATE_Pos       CLOCK_XO_STAT_STATE_Pos   /**< HF clock STAT state position definition. */
+#else
+#define NRF_CLOCK_INTENSET_HFCLKSTARTED_Msk CLOCK_INTENSET_HFCLKSTARTED_Msk
+#define NRF_TASKS_HFCLKSTART                TASKS_HFCLKSTART
+#define NRF_TASKS_HFCLKSTOP                 TASKS_HFCLKSTOP
+#define NRF_EVENTS_HFCLKSTARTED             EVENTS_HFCLKSTARTED
+#define NRF_HFCLKRUN                        HFCLKRUN
+#define NRF_HFCLKSTAT                       HFCLKSTAT
+#define NRF_CLOCK_HFCLKRUN_STATUS_Msk       CLOCK_HFCLKRUN_STATUS_Msk
+#define NRF_CLOCK_HFCLKRUN_STATUS_Pos       CLOCK_HFCLKRUN_STATUS_Pos
+#define NRF_CLOCK_HFCLKSTAT_STATE_Msk       CLOCK_HFCLKSTAT_STATE_Msk
+#define NRF_CLOCK_HFCLKSTAT_STATE_Pos       CLOCK_HFCLKSTAT_STATE_Pos
 #endif
 
 /**
@@ -113,35 +212,45 @@ extern "C" {
 typedef enum
 {
 #if defined(CLOCK_LFCLKSRC_SRC_LFULP) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_LFCLK_LFULP = CLOCK_LFCLKSRC_SRC_LFULP, /**< Internal 32 kHz Ultra-low power oscillator. */
+    NRF_CLOCK_LFCLK_LFULP = CLOCK_LFCLKSRC_SRC_LFULP,  /**< Internal 32 kHz Ultra-low power oscillator. */
 #endif
+
 #if defined(CLOCK_LFCLKSRC_SRC_RC) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_LFCLK_RC    = CLOCK_LFCLKSRC_SRC_RC,    /**< Internal 32 kHz RC oscillator. */
+    NRF_CLOCK_LFCLK_RC    = CLOCK_LFCLKSRC_SRC_RC,     /**< Internal 32 kHz RC oscillator. */
+#elif NRF_CLOCK_HAS_LFCLK_TYPE
+    NRF_CLOCK_LFCLK_RC    = CLOCK_LFCLK_SRC_SRC_LFRC,  /**< Internal 32 kHz RC oscillator. */
 #else
-    NRF_CLOCK_LFCLK_RC    = CLOCK_LFCLKSRC_SRC_LFRC,  /**< Internal 32 kHz RC oscillator. */
+    NRF_CLOCK_LFCLK_RC    = CLOCK_LFCLKSRC_SRC_LFRC,   /**< Internal 32 kHz RC oscillator. */
 #endif
 
 #if defined(CLOCK_LFCLKSRC_SRC_Xtal) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_LFCLK_Xtal  = CLOCK_LFCLKSRC_SRC_Xtal,  /**< External 32 kHz crystal. */
+    NRF_CLOCK_LFCLK_XTAL  = CLOCK_LFCLKSRC_SRC_Xtal,   /**< External 32 kHz crystal. */
+#elif NRF_CLOCK_HAS_LFCLK_TYPE
+    NRF_CLOCK_LFCLK_XTAL  = CLOCK_LFCLK_SRC_SRC_LFXO,  /**< External 32 kHz crystal. */
 #else
-    NRF_CLOCK_LFCLK_Xtal  = CLOCK_LFCLKSRC_SRC_LFXO,  /**< External 32 kHz crystal. */
+    NRF_CLOCK_LFCLK_XTAL  = CLOCK_LFCLKSRC_SRC_LFXO,   /**< External 32 kHz crystal. */
 #endif
 
 #if defined(CLOCK_LFCLKSRC_SRC_Synth) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_LFCLK_Synth = CLOCK_LFCLKSRC_SRC_Synth, /**< Internal 32 kHz synthesizer from HFCLK system clock. */
+    NRF_CLOCK_LFCLK_SYNTH = CLOCK_LFCLKSRC_SRC_Synth,   /**< Internal 32 kHz synthesized from HFCLK system clock. */
+#elif NRF_CLOCK_HAS_LFCLK_TYPE
+    NRF_CLOCK_LFCLK_SYNTH = CLOCK_LFCLK_SRC_SRC_LFSYNT, /**< Internal 32 kHz synthesized from HFCLK system clock. */
+#elif defined(CLOCK_LFCLKSRC_SRC_LFSYNT)
+    NRF_CLOCK_LFCLK_SYNTH = CLOCK_LFCLKSRC_SRC_LFSYNT,  /**< Internal 32 kHz synthesized from HFCLK system clock. */
 #endif
+
 #if defined(NRF_CLOCK_USE_EXTERNAL_LFCLK_SOURCES) || defined(__NRFX_DOXYGEN__)
     /**
      * External 32 kHz low swing signal. Used only with the LFCLKSRC register.
-     * For the others @ref NRF_CLOCK_LFCLK_Xtal is returned for this setting.
+     * For the others @ref NRF_CLOCK_LFCLK_XTAL is returned for this setting.
      */
-    NRF_CLOCK_LFCLK_Xtal_Low_Swing = (CLOCK_LFCLKSRC_SRC_Xtal |
+    NRF_CLOCK_LFCLK_XTAL_LOW_SWING = (CLOCK_LFCLKSRC_SRC_Xtal |
         (CLOCK_LFCLKSRC_EXTERNAL_Enabled << CLOCK_LFCLKSRC_EXTERNAL_Pos)),
     /**
      * External 32 kHz full swing signal. Used only with the LFCLKSRC register.
-     * For the others @ref NRF_CLOCK_LFCLK_Xtal is returned for this setting.
+     * For the others @ref NRF_CLOCK_LFCLK_XTAL is returned for this setting.
      */
-    NRF_CLOCK_LFCLK_Xtal_Full_Swing = (CLOCK_LFCLKSRC_SRC_Xtal |
+    NRF_CLOCK_LFCLK_XTAL_FULL_SWING = (CLOCK_LFCLKSRC_SRC_Xtal |
         (CLOCK_LFCLKSRC_BYPASS_Enabled   << CLOCK_LFCLKSRC_BYPASS_Pos) |
         (CLOCK_LFCLKSRC_EXTERNAL_Enabled << CLOCK_LFCLKSRC_EXTERNAL_Pos)),
 #endif // defined(NRF_CLOCK_USE_EXTERNAL_LFCLK_SOURCES) || defined(__NRFX_DOXYGEN__)
@@ -153,15 +262,20 @@ typedef enum
  */
 typedef enum
 {
-#if defined(CLOCK_HFCLKSTAT_SRC_RC) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_HFCLK_LOW_ACCURACY  = CLOCK_HFCLKSTAT_SRC_RC,  /**< Internal 16 MHz RC oscillator. */
-#elif defined(CLOCK_HFCLKSTAT_SRC_HFINT)
-    NRF_CLOCK_HFCLK_LOW_ACCURACY  = CLOCK_HFCLKSTAT_SRC_HFINT,  /**< Internal 16 MHz RC oscillator. */
-#endif
 #if defined(CLOCK_HFCLKSTAT_SRC_Xtal) || defined(__NRFX_DOXYGEN__)
-    NRF_CLOCK_HFCLK_HIGH_ACCURACY = CLOCK_HFCLKSTAT_SRC_Xtal /**< External 16 MHz/32 MHz crystal oscillator. */
+    NRF_CLOCK_HFCLK_HIGH_ACCURACY = CLOCK_HFCLKSTAT_SRC_Xtal,  /**< External 16 MHz/32 MHz crystal oscillator. */
+#elif NRF_CLOCK_HAS_XO
+    NRF_CLOCK_HFCLK_HIGH_ACCURACY,                             /**< External 32 MHz crystal oscillator. */
 #else
-    NRF_CLOCK_HFCLK_HIGH_ACCURACY = CLOCK_HFCLKSTAT_SRC_HFXO /**< External 32 MHz crystal oscillator. */
+    NRF_CLOCK_HFCLK_HIGH_ACCURACY = CLOCK_HFCLKSTAT_SRC_HFXO,  /**< External 32 MHz crystal oscillator. */
+#endif
+
+#if defined(CLOCK_HFCLKSTAT_SRC_RC) || defined(__NRFX_DOXYGEN__)
+    NRF_CLOCK_HFCLK_LOW_ACCURACY  = CLOCK_HFCLKSTAT_SRC_RC,    /**< Internal 16 MHz RC oscillator. */
+#elif defined(CLOCK_HFCLKSTAT_SRC_HFINT)
+    NRF_CLOCK_HFCLK_LOW_ACCURACY  = CLOCK_HFCLKSTAT_SRC_HFINT, /**< Internal 16 MHz RC oscillator. */
+#else
+    NRF_CLOCK_HFCLK_LOW_ACCURACY,                              /**< Internal RC oscillator. */
 #endif
 } nrf_clock_hfclk_t;
 
@@ -178,7 +292,7 @@ typedef enum
 #endif
 } nrf_clock_domain_t;
 
-#if NRF_CLOCK_HAS_HFCLK_DIV || NRF_CLOCK_HAS_HFCLK192M
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT) || NRF_CLOCK_HAS_HFCLK192M
 /**
  * @brief High-frequency clock frequency configuration.
  * @details Used by HFCLKCTRL and HFCLK192MCTRL registers.
@@ -191,7 +305,7 @@ typedef enum
     NRF_CLOCK_HFCLK_DIV_4 = CLOCK_HFCLK192MCTRL_HCLK192M_Div4, /**< Divide HFCLK192M by 4 */
 #endif
 } nrf_clock_hfclk_div_t;
-#endif // NRF_CLOCK_HAS_HFCLK_DIV || NRF_CLOCK_HAS_HFCLK192M
+#endif // defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT) || NRF_CLOCK_HAS_HFCLK192M
 
 /**
  * @brief Trigger status of task LFCLKSTART/HFCLKSTART.
@@ -202,15 +316,19 @@ typedef enum
  */
 typedef enum
 {
-    NRF_CLOCK_START_TASK_NOT_TRIGGERED = CLOCK_LFCLKRUN_STATUS_NotTriggered, /**< Task LFCLKSTART/HFCLKSTART has not been triggered. */
-    NRF_CLOCK_START_TASK_TRIGGERED     = CLOCK_LFCLKRUN_STATUS_Triggered     /**< Task LFCLKSTART/HFCLKSTART has been triggered. */
+    NRF_CLOCK_START_TASK_NOT_TRIGGERED = NRF_CLOCK_LFCLKRUN_STATUS_NotTriggered, /**< Task LFCLKSTART/HFCLKSTART has not been triggered. */
+    NRF_CLOCK_START_TASK_TRIGGERED     = NRF_CLOCK_LFCLKRUN_STATUS_Triggered     /**< Task LFCLKSTART/HFCLKSTART has been triggered. */
 } nrf_clock_start_task_status_t;
 
 /** @brief Interrupts. */
 typedef enum
 {
-    NRF_CLOCK_INT_HF_STARTED_MASK      = CLOCK_INTENSET_HFCLKSTARTED_Msk,      /**< Interrupt on HFCLKSTARTED event. */
-    NRF_CLOCK_INT_LF_STARTED_MASK      = CLOCK_INTENSET_LFCLKSTARTED_Msk,      /**< Interrupt on LFCLKSTARTED event. */
+    NRF_CLOCK_INT_HF_STARTED_MASK      = NRF_CLOCK_INTENSET_HFCLKSTARTED_Msk,  /**< Interrupt on HFCLKSTARTED event. */
+    NRF_CLOCK_INT_LF_STARTED_MASK      = NRF_CLOCK_INTENSET_LFCLKSTARTED_Msk,  /**< Interrupt on LFCLKSTARTED event. */
+
+#if NRF_CLOCK_HAS_PLL
+    NRFX_CLOCK_INT_PLL_STARTED_MASK    = CLOCK_INTENSET_PLLSTARTED_Msk,        /**< Interrupt on PLLSTARTED event. */
+#endif
 #if NRF_CLOCK_HAS_CALIBRATION
     NRF_CLOCK_INT_DONE_MASK            = CLOCK_INTENSET_DONE_Msk,              /**< Interrupt on DONE event. */
 #endif
@@ -238,8 +356,17 @@ typedef enum
  */
 typedef enum
 {
+#if NRF_CLOCK_HAS_XO
+    NRF_CLOCK_TASK_HFCLKSTART      = offsetof(NRF_CLOCK_Type, TASKS_XOSTART),         /**< Start HFCLK clock source. */
+    NRF_CLOCK_TASK_HFCLKSTOP       = offsetof(NRF_CLOCK_Type, TASKS_XOSTOP),          /**< Stop HFCLK clock source. */
+#else
     NRF_CLOCK_TASK_HFCLKSTART      = offsetof(NRF_CLOCK_Type, TASKS_HFCLKSTART),      /**< Start HFCLK clock source. */
     NRF_CLOCK_TASK_HFCLKSTOP       = offsetof(NRF_CLOCK_Type, TASKS_HFCLKSTOP),       /**< Stop HFCLK clock source. */
+#endif
+#if NRF_CLOCK_HAS_PLL
+    NRF_CLOCK_TASK_PLLSTART        = offsetof(NRF_CLOCK_Type, TASKS_PLLSTART),        /**< Start PLL and keep it running, regardless of the automatic clock requests. */
+    NRF_CLOCK_TASK_PLLSTOP         = offsetof(NRF_CLOCK_Type, TASKS_PLLSTOP),         /**< Stop PLL. */
+#endif
     NRF_CLOCK_TASK_LFCLKSTART      = offsetof(NRF_CLOCK_Type, TASKS_LFCLKSTART),      /**< Start LFCLK clock source. */
     NRF_CLOCK_TASK_LFCLKSTOP       = offsetof(NRF_CLOCK_Type, TASKS_LFCLKSTOP),       /**< Stop LFCLK clock source. */
 #if NRF_CLOCK_HAS_CALIBRATION
@@ -262,7 +389,14 @@ typedef enum
 /** @brief Events. */
 typedef enum
 {
+#if NRF_CLOCK_HAS_XO
+    NRF_CLOCK_EVENT_HFCLKSTARTED      = offsetof(NRF_CLOCK_Type, EVENTS_XOSTARTED),         /**< HFCLK oscillator started. */
+#else
     NRF_CLOCK_EVENT_HFCLKSTARTED      = offsetof(NRF_CLOCK_Type, EVENTS_HFCLKSTARTED),      /**< HFCLK oscillator started. */
+#endif
+#if NRF_CLOCK_HAS_PLL
+    NRF_CLOCK_EVENT_PLLSTARTED        = offsetof(NRF_CLOCK_Type, EVENTS_PLLSTARTED),        /**< PLL started. */
+#endif
     NRF_CLOCK_EVENT_LFCLKSTARTED      = offsetof(NRF_CLOCK_Type, EVENTS_LFCLKSTARTED),      /**< LFCLK oscillator started. */
 #if NRF_CLOCK_HAS_CALIBRATION
     NRF_CLOCK_EVENT_DONE              = offsetof(NRF_CLOCK_Type, EVENTS_DONE),              /**< Calibration of LFCLK RC oscillator completed. */
@@ -287,6 +421,7 @@ typedef enum
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be enabled.
+ *                  Use @ref nrf_clock_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_clock_int_enable(NRF_CLOCK_Type * p_reg, uint32_t mask);
 
@@ -295,6 +430,7 @@ NRF_STATIC_INLINE void nrf_clock_int_enable(NRF_CLOCK_Type * p_reg, uint32_t mas
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be disabled.
+ *                  Use @ref nrf_clock_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_clock_int_disable(NRF_CLOCK_Type * p_reg, uint32_t mask);
 
@@ -303,6 +439,7 @@ NRF_STATIC_INLINE void nrf_clock_int_disable(NRF_CLOCK_Type * p_reg, uint32_t ma
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be checked.
+ *                  Use @ref nrf_clock_int_mask_t values for bit masking.
  *
  * @return Mask of enabled interrupts.
  */
@@ -374,18 +511,19 @@ NRF_STATIC_INLINE bool nrf_clock_start_task_check(NRF_CLOCK_Type const * p_reg,
 /**
  * @brief Function for retrieving the state of the clock.
  *
- * @param[in]  p_reg   Pointer to the structure of registers of the peripheral.
- * @param[in]  domain  Clock domain.
- * @param[out] clk_src Clock source that is running. Set to NULL if not needed.
- *                     Ignored for HFCLKAUDIO domain. Typecast it to @ref nrf_clock_lfclk_t for
- *                     LFCLK and @ref nrf_clock_hfclk_t for HFCLK and HFCLK192M.
+ * @param[in]  p_reg     Pointer to the structure of registers of the peripheral.
+ * @param[in]  domain    Clock domain.
+ * @param[out] p_clk_src Pointer to clock source that is running. Set to NULL if not needed.
+ *                       Ignored for HFCLKAUDIO domain. Variable pointed by @p p_clk_src
+ *                       must be of either @ref nrf_clock_lfclk_t type for LFCLK
+ *                       or @ref nrf_clock_hfclk_t type for HFCLK and HFCLK192M.
  *
  * @retval false The clock is not running.
  * @retval true  The clock is running.
  */
 NRF_STATIC_INLINE bool nrf_clock_is_running(NRF_CLOCK_Type const * p_reg,
                                             nrf_clock_domain_t     domain,
-                                            void *                 clk_src);
+                                            void *                 p_clk_src);
 
 /**
  * @brief Function for changing the low-frequency clock source.
@@ -406,7 +544,7 @@ NRF_STATIC_INLINE void nrf_clock_lf_src_set(NRF_CLOCK_Type * p_reg, nrf_clock_lf
  *                               is the selected source for the low-frequency clock.
  * @retval NRF_CLOCK_LFCLK_Xtal  An external 32 kHz crystal oscillator
  *                               is the selected source for the low-frequency clock.
- * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesizer from
+ * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesized from
  *                               the HFCLK is the selected source for the low-frequency clock.
  */
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_src_get(NRF_CLOCK_Type const * p_reg);
@@ -422,7 +560,7 @@ NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_src_get(NRF_CLOCK_Type const * 
  *                               is the active source of the low-frequency clock.
  * @retval NRF_CLOCK_LFCLK_Xtal  An external 32 kHz crystal oscillator
  *                               is the active source of the low-frequency clock.
- * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesizer from
+ * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesized from
  *                               the HFCLK is the active source of the low-frequency clock.
  */
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_actv_src_get(NRF_CLOCK_Type const * p_reg);
@@ -437,7 +575,7 @@ NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_actv_src_get(NRF_CLOCK_Type con
  *                               is running and generating the LFCLK clock.
  * @retval NRF_CLOCK_LFCLK_Xtal  An external 32 kHz crystal oscillator
  *                               is running and generating the LFCLK clock.
- * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesizer from
+ * @retval NRF_CLOCK_LFCLK_Synth The internal 32 kHz synthesized from
  *                               the HFCLK is running and generating the LFCLK clock.
  */
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_srccopy_get(NRF_CLOCK_Type const * p_reg);
@@ -561,7 +699,7 @@ uint16_t nrf_clock_hfclkaudio_config_get(NRF_CLOCK_Type const * p_reg);
 NRF_STATIC_INLINE void nrf_clock_cal_timer_timeout_set(NRF_CLOCK_Type * p_reg, uint32_t interval);
 #endif
 
-#if NRF_CLOCK_HAS_HFCLK_DIV
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT)
 /**
  * @brief Function for changing the HFCLK frequency divider.
  *
@@ -622,7 +760,8 @@ NRF_STATIC_INLINE void nrf_clock_hfclk192m_src_set(NRF_CLOCK_Type *  p_reg,
 NRF_STATIC_INLINE nrf_clock_hfclk_t nrf_clock_hfclk192m_src_get(NRF_CLOCK_Type const * p_reg);
 #endif // NRF_CLOCK_HAS_HFCLK192M
 
-#if NRF_CLOCK_HAS_ALWAYSRUN
+#if (NRF_CLOCK_HAS_LFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK192M || \
+     NRF_CLOCK_HAS_HFCLKAUDIO)
 /**
  * @brief Function for setting the clock domain to always run.
  *
@@ -630,9 +769,9 @@ NRF_STATIC_INLINE nrf_clock_hfclk_t nrf_clock_hfclk192m_src_get(NRF_CLOCK_Type c
  * @param[in] domain    Clock domain.
  * @param[in] alwaysrun Ensure the clock is always running.
  */
-NRF_STATIC_INLINE void nrf_clock_alwaysrun_set(NRF_CLOCK_Type const * p_reg,
-                                               nrf_clock_domain_t     domain,
-                                               bool                   alwaysrun);
+NRF_STATIC_INLINE void nrf_clock_alwaysrun_set(NRF_CLOCK_Type *   p_reg,
+                                               nrf_clock_domain_t domain,
+                                               bool               alwaysrun);
 /**
  * @brief Function for checking if the clock domain is configured to always run.
  *
@@ -655,7 +794,8 @@ NRF_STATIC_INLINE bool nrf_clock_alwaysrun_get(NRF_CLOCK_Type const * p_reg,
  */
 NRF_STATIC_INLINE bool nrf_clock_alwaysrun_active_get(NRF_CLOCK_Type const * p_reg,
                                                       nrf_clock_domain_t     domain);
-#endif
+#endif /* (NRF_CLOCK_HAS_LFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK_ALWAYSRUN ||
+           NRF_CLOCK_HAS_HFCLK192M || NRF_CLOCK_HAS_HFCLKAUDIO) */
 
 #if defined(DPPI_PRESENT) || defined(__NRFX_DOXYGEN__)
 /**
@@ -721,7 +861,7 @@ NRF_STATIC_INLINE uint32_t nrf_clock_int_enable_check(NRF_CLOCK_Type const * p_r
 NRF_STATIC_INLINE uint32_t nrf_clock_task_address_get(NRF_CLOCK_Type const * p_reg,
                                                       nrf_clock_task_t       task)
 {
-    return (uint32_t)((uint8_t *)p_reg + (uint32_t)task);
+    return nrf_task_event_address_get(p_reg, task);
 }
 
 NRF_STATIC_INLINE void nrf_clock_task_trigger(NRF_CLOCK_Type * p_reg, nrf_clock_task_t task)
@@ -732,21 +872,18 @@ NRF_STATIC_INLINE void nrf_clock_task_trigger(NRF_CLOCK_Type * p_reg, nrf_clock_
 NRF_STATIC_INLINE uint32_t nrf_clock_event_address_get(NRF_CLOCK_Type const * p_reg,
                                                        nrf_clock_event_t      event)
 {
-    return (uint32_t)((uint8_t *)p_reg + (uint32_t)event);
+    return nrf_task_event_address_get(p_reg, event);
 }
 
 NRF_STATIC_INLINE void nrf_clock_event_clear(NRF_CLOCK_Type * p_reg, nrf_clock_event_t event)
 {
     *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event)) = 0x0UL;
-#if __CORTEX_M == 0x04
-    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event));
-    (void)dummy;
-#endif
+    nrf_event_readback((uint8_t *)p_reg + (uint32_t)event);
 }
 
 NRF_STATIC_INLINE bool nrf_clock_event_check(NRF_CLOCK_Type const * p_reg, nrf_clock_event_t event)
 {
-    return (bool)*((volatile uint32_t *)((uint8_t *)p_reg + event));
+    return nrf_event_check(p_reg, event);
 }
 
 NRF_STATIC_INLINE bool nrf_clock_start_task_check(NRF_CLOCK_Type const * p_reg,
@@ -755,11 +892,11 @@ NRF_STATIC_INLINE bool nrf_clock_start_task_check(NRF_CLOCK_Type const * p_reg,
     switch (domain)
     {
         case NRF_CLOCK_DOMAIN_LFCLK:
-            return ((p_reg->LFCLKRUN & CLOCK_LFCLKRUN_STATUS_Msk)
-                    >> CLOCK_LFCLKRUN_STATUS_Pos);
+            return ((p_reg->NRF_LFCLKRUN & NRF_CLOCK_LFCLKRUN_STATUS_Msk)
+                    >> NRF_CLOCK_LFCLKRUN_STATUS_Pos);
         case NRF_CLOCK_DOMAIN_HFCLK:
-            return ((p_reg->HFCLKRUN & CLOCK_HFCLKRUN_STATUS_Msk)
-                    >> CLOCK_HFCLKRUN_STATUS_Pos);
+            return ((p_reg->NRF_HFCLKRUN & NRF_CLOCK_HFCLKRUN_STATUS_Msk)
+                    >> NRF_CLOCK_HFCLKRUN_STATUS_Pos);
 #if NRF_CLOCK_HAS_HFCLK192M
         case NRF_CLOCK_DOMAIN_HFCLK192M:
             return ((p_reg->HFCLK192MRUN & CLOCK_HFCLK192MRUN_STATUS_Msk)
@@ -776,70 +913,84 @@ NRF_STATIC_INLINE bool nrf_clock_start_task_check(NRF_CLOCK_Type const * p_reg,
     }
 }
 
+/*
+ * `-Warray-bounds` warning is disabled for the `nrf_clock_is_running`
+ * function because GCC 12 and above may report a false positive due to the
+ * size of the write access to the memory address pointed by the `p_clk_src`
+ * argument being variable depending on the value of the `domain` argument.
+ */
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 NRF_STATIC_INLINE bool nrf_clock_is_running(NRF_CLOCK_Type const * p_reg,
                                             nrf_clock_domain_t     domain,
-                                            void *                 clk_src)
+                                            void *                 p_clk_src)
 {
+    bool clock_running;
     switch (domain)
     {
         case NRF_CLOCK_DOMAIN_LFCLK:
-            if (clk_src != NULL)
+            clock_running = p_reg->NRF_LFCLKSTAT & NRF_CLOCK_LFCLKSTAT_STATE_Msk;
+            if (p_clk_src != NULL)
             {
-                (*(uint32_t *)clk_src) = ((p_reg->LFCLKSTAT & CLOCK_LFCLKSTAT_SRC_Msk)
-                                          >> CLOCK_LFCLKSTAT_SRC_Pos);
-            }
-            if ((p_reg->LFCLKSTAT & CLOCK_LFCLKSTAT_STATE_Msk)
-                >> CLOCK_LFCLKSTAT_STATE_Pos)
-            {
-                return true;
+                (*(nrf_clock_lfclk_t *)p_clk_src) =
+                    (nrf_clock_lfclk_t)((p_reg->NRF_LFCLKSTAT & NRF_CLOCK_LFCLKSTAT_SRC_Msk)
+                                        >> NRF_CLOCK_LFCLKSTAT_SRC_Pos);
             }
             break;
         case NRF_CLOCK_DOMAIN_HFCLK:
-            if (clk_src != NULL)
+            clock_running = p_reg->NRF_HFCLKSTAT & NRF_CLOCK_HFCLKSTAT_STATE_Msk;
+            if (p_clk_src != NULL)
             {
-                (*(uint32_t *)clk_src) = ((p_reg->HFCLKSTAT & CLOCK_HFCLKSTAT_SRC_Msk)
-                                          >> CLOCK_HFCLKSTAT_SRC_Pos);
-            }
-            if ((p_reg->HFCLKSTAT & CLOCK_HFCLKSTAT_STATE_Msk)
-                >> CLOCK_HFCLKSTAT_STATE_Pos)
-            {
-                return true;
+#if NRF_CLOCK_HAS_XO
+                /* XO registers do not contain information about low accuracy source being active.
+                 * It has to be derived from HFCLK state. */
+                (*(nrf_clock_hfclk_t *)p_clk_src) = clock_running ? NRF_CLOCK_HFCLK_HIGH_ACCURACY :
+                                                                    NRF_CLOCK_HFCLK_LOW_ACCURACY;
+#else
+                (*(nrf_clock_hfclk_t *)p_clk_src) =
+                    (nrf_clock_hfclk_t)((p_reg->NRF_HFCLKSTAT & CLOCK_HFCLKSTAT_SRC_Msk)
+                                        >> CLOCK_HFCLKSTAT_SRC_Pos);
+#endif
             }
             break;
 #if NRF_CLOCK_HAS_HFCLK192M
         case NRF_CLOCK_DOMAIN_HFCLK192M:
-            if (clk_src != NULL)
+            clock_running = p_reg->HFCLK192MSTAT & CLOCK_HFCLK192MSTAT_STATE_Msk;
+            if (p_clk_src != NULL)
             {
-                (*(uint32_t *)clk_src) = ((p_reg->HFCLK192MSTAT & CLOCK_HFCLK192MSTAT_SRC_Msk)
-                                          >> CLOCK_HFCLK192MSTAT_SRC_Pos);
-            }
-            if ((p_reg->HFCLK192MSTAT & CLOCK_HFCLK192MSTAT_STATE_Msk)
-                >> CLOCK_HFCLK192MSTAT_STATE_Pos)
-            {
-                return true;
+                (*(nrf_clock_hfclk_t *)p_clk_src) =
+                    (nrf_clock_hfclk_t)((p_reg->HFCLK192MSTAT & CLOCK_HFCLK192MSTAT_SRC_Msk)
+                                        >> CLOCK_HFCLK192MSTAT_SRC_Pos);
             }
             break;
 #endif
 #if NRF_CLOCK_HAS_HFCLKAUDIO
         case NRF_CLOCK_DOMAIN_HFCLKAUDIO:
-            return (p_reg->HFCLKAUDIOSTAT & CLOCK_HFCLKAUDIOSTAT_STATE_Msk) ==
-                   CLOCK_HFCLKAUDIOSTAT_STATE_Msk;
+            clock_running = p_reg->HFCLKAUDIOSTAT & CLOCK_HFCLKAUDIOSTAT_STATE_Msk;
+            break;
 #endif
         default:
             NRFX_ASSERT(0);
             return false;
     }
-    return false;
+    return clock_running;
 }
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 NRF_STATIC_INLINE void nrf_clock_lf_src_set(NRF_CLOCK_Type * p_reg, nrf_clock_lfclk_t source)
 {
-    p_reg->LFCLKSRC = (uint32_t)(source);
+    p_reg->NRF_LFCLKSRC = (uint32_t)(source);
 }
 
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_src_get(NRF_CLOCK_Type const * p_reg)
 {
-    return (nrf_clock_lfclk_t)(p_reg->LFCLKSRC);
+    return (nrf_clock_lfclk_t)(p_reg->NRF_LFCLKSRC);
 }
 
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_actv_src_get(NRF_CLOCK_Type const * p_reg)
@@ -851,8 +1002,8 @@ NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_actv_src_get(NRF_CLOCK_Type con
 
 NRF_STATIC_INLINE nrf_clock_lfclk_t nrf_clock_lf_srccopy_get(NRF_CLOCK_Type const * p_reg)
 {
-    return (nrf_clock_lfclk_t)((p_reg->LFCLKSRCCOPY & CLOCK_LFCLKSRCCOPY_SRC_Msk)
-                                >> CLOCK_LFCLKSRCCOPY_SRC_Pos);
+    return (nrf_clock_lfclk_t)((p_reg->NRF_LFCLKSRCCOPY & NRF_CLOCK_LFCLKSRCCOPY_SRC_Msk)
+                                >> NRF_CLOCK_LFCLKSRCCOPY_SRC_Pos);
 }
 
 NRF_STATIC_INLINE bool nrf_clock_lf_is_running(NRF_CLOCK_Type const * p_reg)
@@ -878,6 +1029,11 @@ NRF_STATIC_INLINE nrf_clock_hfclk_t nrf_clock_hf_src_get(NRF_CLOCK_Type const * 
 {
 #if NRF_CLOCK_HAS_HFCLKSRC
     return (nrf_clock_hfclk_t)(p_reg->HFCLKSRC);
+#elif NRF_CLOCK_HAS_XO
+    /* XO registers do not contain information about low accuracy source being active.
+     * It has to be derived from HFCLK state. */
+    return (p_reg->NRF_HFCLKSTAT & NRF_CLOCK_HFCLKSTAT_STATE_Msk) ? NRF_CLOCK_HFCLK_HIGH_ACCURACY :
+                                                                    NRF_CLOCK_HFCLK_LOW_ACCURACY;
 #else
     return (nrf_clock_hfclk_t)((p_reg->HFCLKSTAT & CLOCK_HFCLKSTAT_SRC_Msk)
                                 >> CLOCK_HFCLKSTAT_SRC_Pos);
@@ -913,7 +1069,7 @@ uint16_t nrf_clock_hfclkaudio_config_get(NRF_CLOCK_Type const * p_reg)
 }
 #endif
 
-#if NRF_CLOCK_HAS_HFCLK_DIV
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT)
 NRF_STATIC_INLINE
 void nrf_clock_hfclk_div_set(NRF_CLOCK_Type * p_reg, nrf_clock_hfclk_div_t divider)
 {
@@ -960,35 +1116,38 @@ NRF_STATIC_INLINE void nrf_clock_cal_timer_timeout_set(NRF_CLOCK_Type * p_reg, u
 }
 #endif
 
-#if NRF_CLOCK_HAS_ALWAYSRUN
-NRF_STATIC_INLINE void nrf_clock_alwaysrun_set(NRF_CLOCK_Type const * p_reg,
-                                               nrf_clock_domain_t     domain,
-                                               bool                   alwaysrun)
+#if (NRF_CLOCK_HAS_LFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK192M || \
+     NRF_CLOCK_HAS_HFCLKAUDIO)
+NRF_STATIC_INLINE void nrf_clock_alwaysrun_set(NRF_CLOCK_Type *   p_reg,
+                                               nrf_clock_domain_t domain,
+                                               bool               alwaysrun)
 {
-    /* ALWAYSRUN registers should be R/W, but are marked as read-only.
-     * Redefine them as R/W as a workaround. */
     switch (domain)
     {
+#if NRF_CLOCK_HAS_LFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_LFCLK:
-            *(volatile uint32_t *)(&p_reg->LFCLKALWAYSRUN) =
-                ((alwaysrun << CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos)
-                 & CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk);
+            p_reg->NRF_LFCLKALWAYSRUN =
+                ((alwaysrun << NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos)
+                 & NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk);
             break;
+#endif
+#if NRF_CLOCK_HAS_HFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_HFCLK:
-            *(volatile uint32_t *)(&p_reg->HFCLKALWAYSRUN) =
+            p_reg->HFCLKALWAYSRUN =
                 ((alwaysrun << CLOCK_HFCLKALWAYSRUN_ALWAYSRUN_Pos)
                  & CLOCK_HFCLKALWAYSRUN_ALWAYSRUN_Msk);
             break;
+#endif
 #if NRF_CLOCK_HAS_HFCLK192M
         case NRF_CLOCK_DOMAIN_HFCLK192M:
-            *(volatile uint32_t *)(&p_reg->HFCLK192MALWAYSRUN) =
+            p_reg->HFCLK192MALWAYSRUN =
                 ((alwaysrun << CLOCK_HFCLK192MALWAYSRUN_ALWAYSRUN_Pos)
                  & CLOCK_HFCLK192MALWAYSRUN_ALWAYSRUN_Msk);
             break;
 #endif
 #if NRF_CLOCK_HAS_HFCLKAUDIO
         case NRF_CLOCK_DOMAIN_HFCLKAUDIO:
-            *(volatile uint32_t *)(&p_reg->HFCLKAUDIOALWAYSRUN) =
+            p_reg->HFCLKAUDIOALWAYSRUN =
                 ((alwaysrun << CLOCK_HFCLKAUDIOALWAYSRUN_ALWAYSRUN_Pos)
                  & CLOCK_HFCLKAUDIOALWAYSRUN_ALWAYSRUN_Msk);
             break;
@@ -1004,12 +1163,16 @@ NRF_STATIC_INLINE bool nrf_clock_alwaysrun_get(NRF_CLOCK_Type const * p_reg,
 {
     switch (domain)
     {
+#if NRF_CLOCK_HAS_LFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_LFCLK:
-            return ((p_reg->LFCLKALWAYSRUN & CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk)
-                    >> CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos);
+            return ((p_reg->NRF_LFCLKALWAYSRUN & NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Msk)
+                    >> NRF_CLOCK_LFCLKALWAYSRUN_ALWAYSRUN_Pos);
+#endif
+#if NRF_CLOCK_HAS_HFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_HFCLK:
             return ((p_reg->HFCLKALWAYSRUN & CLOCK_HFCLKALWAYSRUN_ALWAYSRUN_Msk)
                     >> CLOCK_HFCLKALWAYSRUN_ALWAYSRUN_Pos);
+#endif
 #if NRF_CLOCK_HAS_HFCLK192M
         case NRF_CLOCK_DOMAIN_HFCLK192M:
             return ((p_reg->HFCLK192MALWAYSRUN & CLOCK_HFCLK192MALWAYSRUN_ALWAYSRUN_Msk)
@@ -1031,12 +1194,16 @@ NRF_STATIC_INLINE bool nrf_clock_alwaysrun_active_get(NRF_CLOCK_Type const * p_r
 {
     switch (domain)
     {
+#if NRF_CLOCK_HAS_LFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_LFCLK:
-            return ((p_reg->LFCLKSTAT & CLOCK_LFCLKSTAT_ALWAYSRUNNING_Msk)
-                    >> CLOCK_LFCLKSTAT_ALWAYSRUNNING_Pos);
+            return ((p_reg->NRF_LFCLKSTAT & NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Msk)
+                    >> NRF_CLOCK_LFCLKSTAT_ALWAYSRUNNING_Pos);
+#endif
+#if NRF_CLOCK_HAS_HFCLK_ALWAYSRUN
         case NRF_CLOCK_DOMAIN_HFCLK:
             return ((p_reg->HFCLKSTAT & CLOCK_HFCLKSTAT_ALWAYSRUNNING_Msk)
                     >> CLOCK_HFCLKSTAT_ALWAYSRUNNING_Pos);
+#endif
 #if NRF_CLOCK_HAS_HFCLK192M
         case NRF_CLOCK_DOMAIN_HFCLK192M:
             return ((p_reg->HFCLK192MSTAT & CLOCK_HFCLK192MSTAT_ALWAYSRUNNING_Msk)
@@ -1052,7 +1219,8 @@ NRF_STATIC_INLINE bool nrf_clock_alwaysrun_active_get(NRF_CLOCK_Type const * p_r
             return false;
     }
 }
-#endif // NRF_CLOCK_HAS_ALWAYSRUN
+#endif /* (NRF_CLOCK_HAS_LFCLK_ALWAYSRUN || NRF_CLOCK_HAS_HFCLK_ALWAYSRUN ||
+           NRF_CLOCK_HAS_HFCLK192M || NRF_CLOCK_HAS_HFCLKAUDIO) */
 
 #if defined(DPPI_PRESENT)
 NRF_STATIC_INLINE void nrf_clock_subscribe_set(NRF_CLOCK_Type * p_reg,
@@ -1060,7 +1228,7 @@ NRF_STATIC_INLINE void nrf_clock_subscribe_set(NRF_CLOCK_Type * p_reg,
                                                uint8_t          channel)
 {
     *((volatile uint32_t *) ((uint8_t *)p_reg+ (uint32_t)task + 0x80uL)) =
-            ((uint32_t)channel | CLOCK_SUBSCRIBE_HFCLKSTART_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_clock_subscribe_clear(NRF_CLOCK_Type * p_reg, nrf_clock_task_t task)
@@ -1073,7 +1241,7 @@ NRF_STATIC_INLINE void nrf_clock_publish_set(NRF_CLOCK_Type *  p_reg,
                                              uint8_t           channel)
 {
     *((volatile uint32_t *) ((uint8_t *)p_reg + (uint32_t)event + 0x80uL)) =
-            ((uint32_t)channel | CLOCK_PUBLISH_HFCLKSTARTED_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_clock_publish_clear(NRF_CLOCK_Type * p_reg, nrf_clock_event_t event)

@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2019 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -49,6 +51,9 @@ void nrfx_usbreg_init(nrfx_usbreg_config_t const * p_config)
 
     nrfx_usbreg_uninit();
     m_usbevt_handler = p_config->handler;
+    nrf_usbreg_event_clear(NRF_USBREGULATOR, NRF_USBREG_EVENT_USBDETECTED);
+    nrf_usbreg_event_clear(NRF_USBREGULATOR, NRF_USBREG_EVENT_USBPWRRDY);
+    nrf_usbreg_event_clear(NRF_USBREGULATOR, NRF_USBREG_EVENT_USBREMOVED);
 
     NRFX_IRQ_PRIORITY_SET(nrfx_get_irq_number(NRF_USBREGULATOR), p_config->irq_priority);
     NRFX_IRQ_ENABLE(nrfx_get_irq_number(NRF_USBREGULATOR));
@@ -73,6 +78,11 @@ void nrfx_usbreg_uninit(void)
     nrfx_usbreg_disable();
     NRFX_IRQ_DISABLE(nrfx_get_irq_number(NRF_USBREGULATOR));
     m_usbevt_handler = NULL;
+}
+
+bool nrfx_usbreg_init_check(void)
+{
+    return (m_usbevt_handler != NULL);
 }
 
 void nrfx_usbreg_irq_handler(void)
