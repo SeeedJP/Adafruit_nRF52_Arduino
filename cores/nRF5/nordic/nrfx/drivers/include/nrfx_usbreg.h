@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2019 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -116,6 +118,14 @@ void nrfx_usbreg_disable(void);
  * @sa nrfx_usbreg_init
  */
 void nrfx_usbreg_uninit(void);
+
+/**
+ * @brief Function for checking if the USBREG driver is initialized.
+ *
+ * @retval true  Driver is already initialized.
+ * @retval false Driver is not initialized.
+ */
+bool nrfx_usbreg_init_check(void);
 
 /**
  * @brief Function for getting the status of USBREG.

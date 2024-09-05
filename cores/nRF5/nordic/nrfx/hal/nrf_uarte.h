@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2015 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,6 +40,14 @@
 extern "C" {
 #endif
 
+#if defined(NRF54H20_XXAA)
+#define NRF_UARTE_CLOCKPIN_TXD_NEEDED 1
+#endif
+
+#if defined(NRF54H20_ENGA_XXAA)
+#define NRF_UARTE_CLOCKPIN_RTS_NEEDED 1
+#endif
+
 #define NRF_UARTE_PSEL_DISCONNECTED 0xFFFFFFFF
 
 /**
@@ -47,54 +57,181 @@ extern "C" {
  * @brief   Hardware access layer for managing the UARTE peripheral.
  */
 
+/**
+ * @brief Macro getting pointer to the structure of registers of the UARTE peripheral.
+ *
+ * @param[in] idx UARTE instance index.
+ *
+ * @return Pointer to the structure of registers of the UARTE peripheral.
+ */
+#define NRF_UARTE_INST_GET(idx) NRFX_CONCAT(NRF_, UARTE, idx)
+
+#if defined(UARTE_DMA_RX_PTR_PTR_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether dedicated DMA register is present. */
+#define NRF_UARTE_HAS_DMA_REG 1
+#else
+#define NRF_UARTE_HAS_DMA_REG 0
+#endif
+
+#if (defined(UARTE_TASKS_DMA_RX_START_START_Msk) && defined(UARTE_EVENTS_DMA_RX_END_END_Msk)) || \
+    defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether UARTE DMA tasks and events are present. */
+#define NRF_UARTE_HAS_DMA_TASKS_EVENTS 1
+#else
+#define NRF_UARTE_HAS_DMA_TASKS_EVENTS 0
+#endif
+
+#if defined(UARTE_SHORTS_DMA_RX_END_DMA_RX_START_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether UARTE DMA shortcuts are present. */
+#define NRF_UARTE_HAS_DMA_SHORTS 1
+#else
+#define NRF_UARTE_HAS_DMA_SHORTS 0
+#endif
+
+#if defined(UARTE_SHORTS_ENDTX_STOPTX_Msk) || defined(UARTE_SHORTS_DMA_TX_END_DMA_TX_STOP_Msk) || \
+    defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether UARTE ENDTX_STOPTX shortcut is present. */
+#define NRF_UARTE_HAS_ENDTX_STOPTX_SHORT 1
+#else
+#define NRF_UARTE_HAS_ENDTX_STOPTX_SHORT 0
+#endif
+
+#if defined(UARTE_EVENTS_FRAMETIMEOUT_EVENTS_FRAMETIMEOUT_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether UARTE FRAMETIMEOUT event is present. */
+#define NRF_UARTE_HAS_FRAME_TIMEOUT 1
+#else
+#define NRF_UARTE_HAS_FRAME_TIMEOUT 0
+#endif
+
+/** @brief Base frequency value 320 MHz for UARTE. */
+#define NRF_UARTE_BASE_FREQUENCY_320MHZ (NRFX_MHZ_TO_HZ(320UL))
+/** @brief Base frequency value 128 MHz for UARTE. */
+#define NRF_UARTE_BASE_FREQUENCY_128MHZ (NRFX_MHZ_TO_HZ(128UL))
+/** @brief Base frequency value 64 MHz for UARTE. */
+#define NRF_UARTE_BASE_FREQUENCY_64MHZ  (NRFX_MHZ_TO_HZ(64UL))
+/** @brief Base frequency value 16 MHz for UARTE. */
+#define NRF_UARTE_BASE_FREQUENCY_16MHZ  (NRFX_MHZ_TO_HZ(16UL))
+
+#if !defined(NRF_UARTE_IS_320MHZ_UARTE)
+/** @brief Macro for checking whether the base frequency for the specified UARTE is 320 MHz. */
+#define NRF_UARTE_IS_320MHZ_UARTE(p_reg)                                                     \
+    NRFX_COND_CODE_1(NRFX_INSTANCE_PRESENT(UARTE120), (p_reg == NRF_UARTE120), (false))
+#endif
+
+#if !defined(NRF_UARTE_IS_128MHZ_UARTE)
+/** @brief Macro for checking whether the base frequency for the specified UARTE is 128 MHz. */
+#define NRF_UARTE_IS_128MHZ_UARTE(p_reg)                                                     \
+    (NRFX_COND_CODE_1(NRFX_IS_ENABLED(NRF_CPU_FREQ_IS_128MHZ),                               \
+        (NRFX_COND_CODE_1(NRFX_INSTANCE_PRESENT(UARTE00), (p_reg == NRF_UARTE00), (false))), \
+        (false)))
+#endif
+
+#if !defined(NRF_UARTE_IS_64MHZ_UARTE)
+/** @brief Macro for checking whether the base frequency for the specified UARTE is 64 MHz. */
+#define NRF_UARTE_IS_64MHZ_UARTE(p_reg)                                                      \
+    (NRFX_COND_CODE_1(NRFX_IS_ENABLED(NRF_CPU_FREQ_IS_64MHZ),                                \
+        (NRFX_COND_CODE_1(NRFX_INSTANCE_PRESENT(UARTE00), (p_reg == NRF_UARTE00), (false))), \
+        (false)))
+#endif
+
+/**
+ * @brief Macro for getting base frequency value in Hz for the specified UARTE.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ */
+#define NRF_UARTE_BASE_FREQUENCY_GET(p_reg)                                  \
+    ((NRF_UARTE_IS_320MHZ_UARTE(p_reg)) ? (NRF_UARTE_BASE_FREQUENCY_320MHZ): \
+    ((NRF_UARTE_IS_128MHZ_UARTE(p_reg)) ? (NRF_UARTE_BASE_FREQUENCY_128MHZ): \
+    ((NRF_UARTE_IS_64MHZ_UARTE(p_reg))  ? (NRF_UARTE_BASE_FREQUENCY_64MHZ) : \
+    (NRF_UARTE_BASE_FREQUENCY_16MHZ))))
+
 /** @brief UARTE tasks. */
 typedef enum
 {
-    NRF_UARTE_TASK_STARTRX   = offsetof(NRF_UARTE_Type, TASKS_STARTRX), ///< Start UART receiver.
-    NRF_UARTE_TASK_STOPRX    = offsetof(NRF_UARTE_Type, TASKS_STOPRX),  ///< Stop UART receiver.
-    NRF_UARTE_TASK_STARTTX   = offsetof(NRF_UARTE_Type, TASKS_STARTTX), ///< Start UART transmitter.
-    NRF_UARTE_TASK_STOPTX    = offsetof(NRF_UARTE_Type, TASKS_STOPTX),  ///< Stop UART transmitter.
-    NRF_UARTE_TASK_FLUSHRX   = offsetof(NRF_UARTE_Type, TASKS_FLUSHRX)  ///< Flush RX FIFO in RX buffer.
+#if NRF_UARTE_HAS_DMA_TASKS_EVENTS
+    NRF_UARTE_TASK_STARTRX   = offsetof(NRF_UARTE_Type, TASKS_DMA.RX.START), ///< Start UART receiver.
+    NRF_UARTE_TASK_STOPRX    = offsetof(NRF_UARTE_Type, TASKS_DMA.RX.STOP),  ///< Stop UART receiver.
+    NRF_UARTE_TASK_STARTTX   = offsetof(NRF_UARTE_Type, TASKS_DMA.TX.START), ///< Start UART transmitter.
+    NRF_UARTE_TASK_STOPTX    = offsetof(NRF_UARTE_Type, TASKS_DMA.TX.STOP),  ///< Stop UART transmitter.
+#else
+    NRF_UARTE_TASK_STARTRX   = offsetof(NRF_UARTE_Type, TASKS_STARTRX),      ///< Start UART receiver.
+    NRF_UARTE_TASK_STOPRX    = offsetof(NRF_UARTE_Type, TASKS_STOPRX),       ///< Stop UART receiver.
+    NRF_UARTE_TASK_STARTTX   = offsetof(NRF_UARTE_Type, TASKS_STARTTX),      ///< Start UART transmitter.
+    NRF_UARTE_TASK_STOPTX    = offsetof(NRF_UARTE_Type, TASKS_STOPTX),       ///< Stop UART transmitter.
+#endif
+    NRF_UARTE_TASK_FLUSHRX   = offsetof(NRF_UARTE_Type, TASKS_FLUSHRX)       ///< Flush RX FIFO in RX buffer.
 } nrf_uarte_task_t;
 
 /** @brief UARTE events. */
 typedef enum
 {
-    NRF_UARTE_EVENT_CTS       = offsetof(NRF_UARTE_Type, EVENTS_CTS),       ///< CTS is activated.
-    NRF_UARTE_EVENT_NCTS      = offsetof(NRF_UARTE_Type, EVENTS_NCTS),      ///< CTS is deactivated.
-    NRF_UARTE_EVENT_RXDRDY    = offsetof(NRF_UARTE_Type, EVENTS_RXDRDY),    ///< Data received in RXD (but potentially not yet transferred to Data RAM).
-    NRF_UARTE_EVENT_ENDRX     = offsetof(NRF_UARTE_Type, EVENTS_ENDRX),     ///< Receive buffer is filled up.
-    NRF_UARTE_EVENT_TXDRDY    = offsetof(NRF_UARTE_Type, EVENTS_TXDRDY),    ///< Data sent from TXD.
-    NRF_UARTE_EVENT_ENDTX     = offsetof(NRF_UARTE_Type, EVENTS_ENDTX),     ///< Last TX byte transmitted.
-    NRF_UARTE_EVENT_ERROR     = offsetof(NRF_UARTE_Type, EVENTS_ERROR),     ///< Error detected.
-    NRF_UARTE_EVENT_RXTO      = offsetof(NRF_UARTE_Type, EVENTS_RXTO),      ///< Receiver timeout.
-    NRF_UARTE_EVENT_RXSTARTED = offsetof(NRF_UARTE_Type, EVENTS_RXSTARTED), ///< Receiver has started.
-    NRF_UARTE_EVENT_TXSTARTED = offsetof(NRF_UARTE_Type, EVENTS_TXSTARTED), ///< Transmitter has started.
-    NRF_UARTE_EVENT_TXSTOPPED = offsetof(NRF_UARTE_Type, EVENTS_TXSTOPPED)  ///< Transmitted stopped.
+    NRF_UARTE_EVENT_CTS           = offsetof(NRF_UARTE_Type, EVENTS_CTS),          ///< CTS is activated.
+    NRF_UARTE_EVENT_NCTS          = offsetof(NRF_UARTE_Type, EVENTS_NCTS),         ///< CTS is deactivated.
+    NRF_UARTE_EVENT_RXDRDY        = offsetof(NRF_UARTE_Type, EVENTS_RXDRDY),       ///< Data received in RXD (but potentially not yet transferred to Data RAM).
+    NRF_UARTE_EVENT_TXDRDY        = offsetof(NRF_UARTE_Type, EVENTS_TXDRDY),       ///< Data sent from TXD.
+    NRF_UARTE_EVENT_ERROR         = offsetof(NRF_UARTE_Type, EVENTS_ERROR),        ///< Error detected.
+    NRF_UARTE_EVENT_RXTO          = offsetof(NRF_UARTE_Type, EVENTS_RXTO),         ///< Receiver timeout.
+    NRF_UARTE_EVENT_TXSTOPPED     = offsetof(NRF_UARTE_Type, EVENTS_TXSTOPPED),    ///< Transmitted stopped.
+#if NRF_UARTE_HAS_DMA_TASKS_EVENTS
+    NRF_UARTE_EVENT_ENDRX         = offsetof(NRF_UARTE_Type, EVENTS_DMA.RX.END),   ///< Receive buffer is filled up.
+    NRF_UARTE_EVENT_ENDTX         = offsetof(NRF_UARTE_Type, EVENTS_DMA.TX.END),   ///< Last TX byte transmitted.
+    NRF_UARTE_EVENT_RXSTARTED     = offsetof(NRF_UARTE_Type, EVENTS_DMA.RX.READY), ///< Receiver has started.
+    NRF_UARTE_EVENT_TXSTARTED     = offsetof(NRF_UARTE_Type, EVENTS_DMA.TX.READY), ///< Transmitter has started.
+#else
+    NRF_UARTE_EVENT_ENDRX         = offsetof(NRF_UARTE_Type, EVENTS_ENDRX),        ///< Receive buffer is filled up.
+    NRF_UARTE_EVENT_ENDTX         = offsetof(NRF_UARTE_Type, EVENTS_ENDTX),        ///< Last TX byte transmitted.
+    NRF_UARTE_EVENT_RXSTARTED     = offsetof(NRF_UARTE_Type, EVENTS_RXSTARTED),    ///< Receiver has started.
+    NRF_UARTE_EVENT_TXSTARTED     = offsetof(NRF_UARTE_Type, EVENTS_TXSTARTED),    ///< Transmitter has started.
+#endif
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+    NRF_UARTE_EVENT_FRAME_TIMEOUT = offsetof(NRF_UARTE_Type, EVENTS_FRAMETIMEOUT), ///< Frame timeout.
+#endif
 } nrf_uarte_event_t;
 
 /** @brief Types of UARTE shortcuts. */
 typedef enum
 {
-    NRF_UARTE_SHORT_ENDRX_STARTRX = UARTE_SHORTS_ENDRX_STARTRX_Msk, ///< Shortcut between ENDRX event and STARTRX task.
-    NRF_UARTE_SHORT_ENDRX_STOPRX  = UARTE_SHORTS_ENDRX_STOPRX_Msk   ///< Shortcut between ENDRX event and STOPRX task.
+#if NRF_UARTE_HAS_DMA_SHORTS
+    NRF_UARTE_SHORT_ENDRX_STARTRX         = UARTE_SHORTS_DMA_RX_END_DMA_RX_START_Msk, ///< Shortcut between ENDRX event and STARTRX task.
+    NRF_UARTE_SHORT_ENDRX_STOPRX          = UARTE_SHORTS_DMA_RX_END_DMA_RX_STOP_Msk,  ///< Shortcut between ENDRX event and STOPRX task.
+    NRF_UARTE_SHORT_ENDTX_STOPTX          = UARTE_SHORTS_DMA_TX_END_DMA_TX_STOP_Msk,  ///< Shortcut between ENDTX event and STOPTX task.
+#else
+    NRF_UARTE_SHORT_ENDRX_STARTRX         = UARTE_SHORTS_ENDRX_STARTRX_Msk,           ///< Shortcut between ENDRX event and STARTRX task.
+    NRF_UARTE_SHORT_ENDRX_STOPRX          = UARTE_SHORTS_ENDRX_STOPRX_Msk,            ///< Shortcut between ENDRX event and STOPRX task.
+#if NRF_UARTE_HAS_ENDTX_STOPTX_SHORT
+    NRF_UARTE_SHORT_ENDTX_STOPTX          = UARTE_SHORTS_ENDTX_STOPTX_Msk,            ///< Shortcut between ENDTX event and STOPTX task.
+#endif
+#endif
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+    NRF_UARTE_SHORT_FRAME_TIMEOUT_STOPRX  = UARTE_SHORTS_FRAMETIMEOUT_DMA_RX_STOP_Msk ///< Shortcut between ENDTX event and STOPTX task.
+#endif
 } nrf_uarte_short_t;
 
 
 /** @brief UARTE interrupts. */
 typedef enum
 {
-    NRF_UARTE_INT_CTS_MASK       = UARTE_INTENSET_CTS_Msk,       ///< Interrupt on CTS event.
-    NRF_UARTE_INT_NCTS_MASK      = UARTE_INTENSET_NCTS_Msk,      ///< Interrupt on NCTS event.
-    NRF_UARTE_INT_RXDRDY_MASK    = UARTE_INTENSET_RXDRDY_Msk,    ///< Interrupt on RXDRDY event.
-    NRF_UARTE_INT_ENDRX_MASK     = UARTE_INTENSET_ENDRX_Msk,     ///< Interrupt on ENDRX event.
-    NRF_UARTE_INT_TXDRDY_MASK    = UARTE_INTENSET_TXDRDY_Msk,    ///< Interrupt on TXDRDY event.
-    NRF_UARTE_INT_ENDTX_MASK     = UARTE_INTENSET_ENDTX_Msk,     ///< Interrupt on ENDTX event.
-    NRF_UARTE_INT_ERROR_MASK     = UARTE_INTENSET_ERROR_Msk,     ///< Interrupt on ERROR event.
-    NRF_UARTE_INT_RXTO_MASK      = UARTE_INTENSET_RXTO_Msk,      ///< Interrupt on RXTO event.
-    NRF_UARTE_INT_RXSTARTED_MASK = UARTE_INTENSET_RXSTARTED_Msk, ///< Interrupt on RXSTARTED event.
-    NRF_UARTE_INT_TXSTARTED_MASK = UARTE_INTENSET_TXSTARTED_Msk, ///< Interrupt on TXSTARTED event.
-    NRF_UARTE_INT_TXSTOPPED_MASK = UARTE_INTENSET_TXSTOPPED_Msk  ///< Interrupt on TXSTOPPED event.
+    NRF_UARTE_INT_CTS_MASK           = UARTE_INTENSET_CTS_Msk,          ///< Interrupt on CTS event.
+    NRF_UARTE_INT_NCTS_MASK          = UARTE_INTENSET_NCTS_Msk,         ///< Interrupt on NCTS event.
+    NRF_UARTE_INT_RXDRDY_MASK        = UARTE_INTENSET_RXDRDY_Msk,       ///< Interrupt on RXDRDY event.
+    NRF_UARTE_INT_TXDRDY_MASK        = UARTE_INTENSET_TXDRDY_Msk,       ///< Interrupt on TXDRDY event.
+    NRF_UARTE_INT_ERROR_MASK         = UARTE_INTENSET_ERROR_Msk,        ///< Interrupt on ERROR event.
+    NRF_UARTE_INT_RXTO_MASK          = UARTE_INTENSET_RXTO_Msk,         ///< Interrupt on RXTO event.
+    NRF_UARTE_INT_TXSTOPPED_MASK     = UARTE_INTENSET_TXSTOPPED_Msk,    ///< Interrupt on TXSTOPPED event.
+#if NRF_UARTE_HAS_DMA_TASKS_EVENTS
+    NRF_UARTE_INT_ENDRX_MASK         = UARTE_INTENSET_DMARXEND_Msk,     ///< Interrupt on ENDRX event.
+    NRF_UARTE_INT_ENDTX_MASK         = UARTE_INTENSET_DMATXEND_Msk,     ///< Interrupt on ENDTX event.
+    NRF_UARTE_INT_RXSTARTED_MASK     = UARTE_INTENSET_DMARXREADY_Msk,   ///< Interrupt on RXSTARTED event.
+    NRF_UARTE_INT_TXSTARTED_MASK     = UARTE_INTENSET_DMATXREADY_Msk,   ///< Interrupt on TXSTARTED event.
+#else
+    NRF_UARTE_INT_ENDRX_MASK         = UARTE_INTENSET_ENDRX_Msk,        ///< Interrupt on ENDRX event.
+    NRF_UARTE_INT_ENDTX_MASK         = UARTE_INTENSET_ENDTX_Msk,        ///< Interrupt on ENDTX event.
+    NRF_UARTE_INT_RXSTARTED_MASK     = UARTE_INTENSET_RXSTARTED_Msk,    ///< Interrupt on RXSTARTED event.
+    NRF_UARTE_INT_TXSTARTED_MASK     = UARTE_INTENSET_TXSTARTED_Msk,    ///< Interrupt on TXSTARTED event.
+#endif
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+    NRF_UARTE_INT_FRAME_TIMEOUT_MASK = UARTE_INTENSET_FRAMETIMEOUT_Msk, ///< Interrupt on FRAMETIMEOUT event.
+#endif
 } nrf_uarte_int_mask_t;
 
 /** @brief Baudrates supported by UARTE. */
@@ -161,16 +298,27 @@ typedef enum
 } nrf_uarte_paritytype_t;
 #endif
 
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+/** @brief Types of UARTE Frame timeout. */
+typedef enum {
+    NRF_UARTE_FRAME_TIMEOUT_EN  = UARTE_CONFIG_FRAMETIMEOUT_ENABLED << UARTE_CONFIG_FRAMETIMEOUT_Pos,  ///< Frame timeout enabled.
+    NRF_UARTE_FRAME_TIMEOUT_DIS = UARTE_CONFIG_FRAMETIMEOUT_DISABLED << UARTE_CONFIG_FRAMETIMEOUT_Pos, ///< Frame timeout disabled.
+} nrf_uarte_frame_timeout_t;
+#endif
+
 /** @brief Structure for UARTE transmission configuration. */
 typedef struct
 {
-    nrf_uarte_hwfc_t       hwfc;       ///< Flow control configuration.
-    nrf_uarte_parity_t     parity;     ///< Parity configuration.
+    nrf_uarte_hwfc_t       hwfc;             ///< Flow control configuration.
+    nrf_uarte_parity_t     parity;           ///< Parity configuration.
 #if defined(UARTE_CONFIG_STOP_Msk) || defined(__NRFX_DOXYGEN__)
-    nrf_uarte_stop_t       stop;       ///< Stop bits.
+    nrf_uarte_stop_t       stop;             ///< Stop bits.
 #endif
 #if defined(UARTE_CONFIG_PARITYTYPE_Msk) || defined(__NRFX_DOXYGEN__)
-    nrf_uarte_paritytype_t paritytype; ///< Parity type.
+    nrf_uarte_paritytype_t paritytype;       ///< Parity type.
+#endif
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+    nrf_uarte_frame_timeout_t frame_timeout; ///< Frame timeout.
 #endif
 } nrf_uarte_config_t;
 
@@ -206,6 +354,24 @@ NRF_STATIC_INLINE uint32_t nrf_uarte_event_address_get(NRF_UARTE_Type const * p_
                                                        nrf_uarte_event_t      event);
 
 /**
+ * @brief Function for configuring UARTE shortcuts.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ * @param[in] mask  Shortcuts to be set.
+ */
+NRF_STATIC_INLINE void nrf_uarte_shorts_set(NRF_UARTE_Type * p_reg, uint32_t mask);
+
+/**
+ * @brief Function for getting UARTE shortcuts.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ * @param[in] mask  Shortcuts to be checked.
+ *
+ * @return Mask of requested shortcuts which were enabled.
+ */
+NRF_STATIC_INLINE uint32_t nrf_uarte_shorts_get(NRF_UARTE_Type * p_reg, uint32_t mask);
+
+/**
  * @brief Function for enabling UARTE shortcuts.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
@@ -226,6 +392,7 @@ NRF_STATIC_INLINE void nrf_uarte_shorts_disable(NRF_UARTE_Type * p_reg, uint32_t
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be enabled.
+ *                  Use @ref nrf_uarte_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_uarte_int_enable(NRF_UARTE_Type * p_reg, uint32_t mask);
 
@@ -234,6 +401,7 @@ NRF_STATIC_INLINE void nrf_uarte_int_enable(NRF_UARTE_Type * p_reg, uint32_t mas
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be checked.
+ *                  Use @ref nrf_uarte_int_mask_t values for bit masking.
  *
  * @return Mask of enabled interrupts.
  */
@@ -244,6 +412,7 @@ NRF_STATIC_INLINE uint32_t nrf_uarte_int_enable_check(NRF_UARTE_Type const * p_r
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be disabled.
+ *                  Use @ref nrf_uarte_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_uarte_int_disable(NRF_UARTE_Type * p_reg, uint32_t mask);
 
@@ -303,6 +472,24 @@ NRF_STATIC_INLINE void nrf_uarte_publish_clear(NRF_UARTE_Type *  p_reg,
 NRF_STATIC_INLINE uint32_t nrf_uarte_errorsrc_get_and_clear(NRF_UARTE_Type * p_reg);
 
 /**
+ * @brief Function for getting error source mask.
+ *
+ * @param p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @return Mask with error source flags.
+ */
+NRF_STATIC_INLINE uint32_t nrf_uarte_errorsrc_get(NRF_UARTE_Type * p_reg);
+
+/**
+ * @brief Function for clearing error source flags after reading.
+ *
+ * @param p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @param errsrc_mask Mask with error sources to be cleared.
+ */
+NRF_STATIC_INLINE void nrf_uarte_errorsrc_clear(NRF_UARTE_Type * p_reg, uint32_t errsrc_mask);
+
+/**
  * @brief Function for enabling UARTE.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
@@ -315,6 +502,16 @@ NRF_STATIC_INLINE void nrf_uarte_enable(NRF_UARTE_Type * p_reg);
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  */
 NRF_STATIC_INLINE void nrf_uarte_disable(NRF_UARTE_Type * p_reg);
+
+/**
+ * @brief Function for checking if the UARTE is enabled.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @retval true  The UARTE is enabled.
+ * @retval false The UARTE is not enabled.
+ */
+NRF_STATIC_INLINE bool nrf_uarte_enable_check(NRF_UARTE_Type const * p_reg);
 
 /**
  * @brief Function for configuring TX/RX pins.
@@ -335,38 +532,38 @@ NRF_STATIC_INLINE void nrf_uarte_txrx_pins_set(NRF_UARTE_Type * p_reg,
 NRF_STATIC_INLINE void nrf_uarte_txrx_pins_disconnect(NRF_UARTE_Type * p_reg);
 
 /**
- * @brief Function for getting TX pin.
+ * @brief Function for getting TX pin selection.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  *
- * @return TX pin number.
+ * @return TX pin selection.
  */
 NRF_STATIC_INLINE uint32_t nrf_uarte_tx_pin_get(NRF_UARTE_Type const * p_reg);
 
 /**
- * @brief Function for getting RX pin.
+ * @brief Function for getting RX pin selection.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  *
- * @return RX pin number.
+ * @return RX pin selection.
  */
 NRF_STATIC_INLINE uint32_t nrf_uarte_rx_pin_get(NRF_UARTE_Type const * p_reg);
 
 /**
- * @brief Function for getting RTS pin.
+ * @brief Function for getting RTS pin selection.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  *
- * @return RTS pin number.
+ * @return RTS pin selection.
  */
 NRF_STATIC_INLINE uint32_t nrf_uarte_rts_pin_get(NRF_UARTE_Type const * p_reg);
 
 /**
- * @brief Function for getting CTS pin.
+ * @brief Function for getting CTS pin selection.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  *
- * @return CTS pin number.
+ * @return CTS pin selection.
  */
 NRF_STATIC_INLINE uint32_t nrf_uarte_cts_pin_get(NRF_UARTE_Type const * p_reg);
 
@@ -437,6 +634,15 @@ NRF_STATIC_INLINE void nrf_uarte_tx_buffer_set(NRF_UARTE_Type * p_reg,
                                                size_t           length);
 
 /**
+ * @brief Function for getting the transmit buffer address.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @return Pointer to the transmit buffer.
+ */
+NRF_STATIC_INLINE uint8_t const * nrf_uarte_tx_buffer_get(NRF_UARTE_Type * p_reg);
+
+/**
  * @brief Function for getting number of bytes transmitted in the last transaction.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
@@ -457,6 +663,15 @@ NRF_STATIC_INLINE void nrf_uarte_rx_buffer_set(NRF_UARTE_Type * p_reg,
                                                size_t           length);
 
 /**
+ * @brief Function for getting the reception buffer address.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @return Pointer to the reception buffer.
+ */
+NRF_STATIC_INLINE uint8_t * nrf_uarte_rx_buffer_get(NRF_UARTE_Type * p_reg);
+
+/**
  * @brief Function for getting number of bytes received in the last transaction.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
@@ -465,26 +680,43 @@ NRF_STATIC_INLINE void nrf_uarte_rx_buffer_set(NRF_UARTE_Type * p_reg,
  */
 NRF_STATIC_INLINE uint32_t nrf_uarte_rx_amount_get(NRF_UARTE_Type const * p_reg);
 
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+/**
+ * @brief Function for setting frame timeout.
+ *
+ * @param[in] p_reg   Pointer to the structure of registers of the peripheral.
+ * @param[in] timeout Frame timeout in bits.
+ */
+NRF_STATIC_INLINE void nrf_uarte_frame_timeout_set(NRF_UARTE_Type * p_reg, uint32_t timeout);
+#endif
+
 #ifndef NRF_DECLARE_ONLY
 NRF_STATIC_INLINE void nrf_uarte_event_clear(NRF_UARTE_Type * p_reg, nrf_uarte_event_t event)
 {
     *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event)) = 0x0UL;
-#if __CORTEX_M == 0x04
-    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event));
-    (void)dummy;
-#endif
+    nrf_event_readback((uint8_t *)p_reg + (uint32_t)event);
 }
 
 NRF_STATIC_INLINE bool nrf_uarte_event_check(NRF_UARTE_Type const * p_reg,
                                              nrf_uarte_event_t      event)
 {
-    return (bool)*(volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event);
+    return nrf_event_check(p_reg, event);
 }
 
 NRF_STATIC_INLINE uint32_t nrf_uarte_event_address_get(NRF_UARTE_Type const * p_reg,
                                                        nrf_uarte_event_t      event)
 {
-    return (uint32_t)((uint8_t *)p_reg + (uint32_t)event);
+    return nrf_task_event_address_get(p_reg, event);
+}
+
+NRF_STATIC_INLINE void nrf_uarte_shorts_set(NRF_UARTE_Type * p_reg, uint32_t mask)
+{
+    p_reg->SHORTS = mask;
+}
+
+NRF_STATIC_INLINE uint32_t nrf_uarte_shorts_get(NRF_UARTE_Type * p_reg, uint32_t mask)
+{
+    return p_reg->SHORTS & mask;
 }
 
 NRF_STATIC_INLINE void nrf_uarte_shorts_enable(NRF_UARTE_Type * p_reg, uint32_t mask)
@@ -518,7 +750,7 @@ NRF_STATIC_INLINE void nrf_uarte_subscribe_set(NRF_UARTE_Type * p_reg,
                                                uint8_t          channel)
 {
     *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) task + 0x80uL)) =
-            ((uint32_t)channel | UARTE_SUBSCRIBE_STARTRX_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_uarte_subscribe_clear(NRF_UARTE_Type * p_reg,
@@ -532,7 +764,7 @@ NRF_STATIC_INLINE void nrf_uarte_publish_set(NRF_UARTE_Type *  p_reg,
                                              uint8_t           channel)
 {
     *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) event + 0x80uL)) =
-            ((uint32_t)channel | UARTE_PUBLISH_CTS_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_uarte_publish_clear(NRF_UARTE_Type *  p_reg,
@@ -549,6 +781,16 @@ NRF_STATIC_INLINE uint32_t nrf_uarte_errorsrc_get_and_clear(NRF_UARTE_Type * p_r
     return errsrc_mask;
 }
 
+NRF_STATIC_INLINE uint32_t nrf_uarte_errorsrc_get(NRF_UARTE_Type * p_reg)
+{
+    return p_reg->ERRORSRC;
+}
+
+NRF_STATIC_INLINE void nrf_uarte_errorsrc_clear(NRF_UARTE_Type * p_reg, uint32_t errsrc_mask)
+{
+    p_reg->ERRORSRC = errsrc_mask;
+}
+
 NRF_STATIC_INLINE void nrf_uarte_enable(NRF_UARTE_Type * p_reg)
 {
     p_reg->ENABLE = UARTE_ENABLE_ENABLE_Enabled;
@@ -557,6 +799,11 @@ NRF_STATIC_INLINE void nrf_uarte_enable(NRF_UARTE_Type * p_reg)
 NRF_STATIC_INLINE void nrf_uarte_disable(NRF_UARTE_Type * p_reg)
 {
     p_reg->ENABLE = UARTE_ENABLE_ENABLE_Disabled;
+}
+
+NRF_STATIC_INLINE bool nrf_uarte_enable_check(NRF_UARTE_Type const * p_reg)
+{
+    return p_reg->ENABLE == UARTE_ENABLE_ENABLE_Enabled;
 }
 
 NRF_STATIC_INLINE void nrf_uarte_txrx_pins_set(NRF_UARTE_Type * p_reg,
@@ -626,6 +873,9 @@ NRF_STATIC_INLINE void nrf_uarte_configure(NRF_UARTE_Type           * p_reg,
 #if defined(UARTE_CONFIG_PARITYTYPE_Msk)
                     | (uint32_t)p_cfg->paritytype
 #endif
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+                    | (uint32_t)p_cfg->frame_timeout
+#endif
                     | (uint32_t)p_cfg->hwfc;
 }
 
@@ -638,27 +888,71 @@ NRF_STATIC_INLINE void nrf_uarte_tx_buffer_set(NRF_UARTE_Type * p_reg,
                                                uint8_t  const * p_buffer,
                                                size_t           length)
 {
+#if NRF_UARTE_HAS_DMA_REG
+    p_reg->DMA.TX.PTR    = (uint32_t)p_buffer;
+    p_reg->DMA.TX.MAXCNT = length;
+#else
     p_reg->TXD.PTR    = (uint32_t)p_buffer;
     p_reg->TXD.MAXCNT = length;
+#endif
+}
+
+NRF_STATIC_INLINE uint8_t const * nrf_uarte_tx_buffer_get(NRF_UARTE_Type * p_reg)
+{
+#if NRF_UARTE_HAS_DMA_REG
+    return (uint8_t const *)p_reg->DMA.TX.PTR;
+#else
+    return (uint8_t const *)p_reg->TXD.PTR;
+#endif
 }
 
 NRF_STATIC_INLINE uint32_t nrf_uarte_tx_amount_get(NRF_UARTE_Type const * p_reg)
 {
+#if NRF_UARTE_HAS_DMA_REG
+    return p_reg->DMA.TX.AMOUNT;
+#else
     return p_reg->TXD.AMOUNT;
+#endif
 }
 
 NRF_STATIC_INLINE void nrf_uarte_rx_buffer_set(NRF_UARTE_Type * p_reg,
                                                uint8_t *        p_buffer,
                                                size_t           length)
 {
+#if NRF_UARTE_HAS_DMA_REG
+    p_reg->DMA.RX.PTR    = (uint32_t)p_buffer;
+    p_reg->DMA.RX.MAXCNT = length;
+#else
     p_reg->RXD.PTR    = (uint32_t)p_buffer;
     p_reg->RXD.MAXCNT = length;
+#endif
+}
+
+NRF_STATIC_INLINE uint8_t * nrf_uarte_rx_buffer_get(NRF_UARTE_Type * p_reg)
+{
+#if NRF_UARTE_HAS_DMA_REG
+    return (uint8_t *)p_reg->DMA.RX.PTR;
+#else
+    return (uint8_t *)p_reg->RXD.PTR;
+#endif
 }
 
 NRF_STATIC_INLINE uint32_t nrf_uarte_rx_amount_get(NRF_UARTE_Type const * p_reg)
 {
+#if NRF_UARTE_HAS_DMA_REG
+    return p_reg->DMA.RX.AMOUNT;
+#else
     return p_reg->RXD.AMOUNT;
+#endif
 }
+
+#if NRF_UARTE_HAS_FRAME_TIMEOUT
+NRF_STATIC_INLINE void nrf_uarte_frame_timeout_set(NRF_UARTE_Type * p_reg, uint32_t timeout)
+{
+    p_reg->FRAMETIMEOUT = timeout;
+}
+#endif
+
 #endif // NRF_DECLARE_ONLY
 
 /** @} */

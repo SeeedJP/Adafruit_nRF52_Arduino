@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2017 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2017 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,6 +39,10 @@
 #include <nrfx_power_clock.h>
 #include "nrfx_power_compat.h"
 
+#if defined(REGULATORS_PRESENT)
+#include <hal/nrf_regulators.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,23 +54,24 @@ extern "C" {
  * @brief   POWER peripheral driver.
  */
 
-#if NRF_POWER_HAS_POFCON || NRFX_CHECK(NRF_REGULATORS_HAS_POFCON) || defined(__NRFX_DOXYGEN__)
+#if NRF_POWER_HAS_POFCON || (defined(REGULATORS_PRESENT) && NRF_REGULATORS_HAS_POF) \
+    || defined(__NRFX_DOXYGEN__)
 /** @brief Symbol indicating whether the power failure comparator is supported. */
 #define NRFX_POWER_SUPPORTS_POFCON 1
 #else
 #define NRFX_POWER_SUPPORTS_POFCON 0
 #endif
 
-#if NRF_POWER_HAS_POFCON_VDDH || NRFX_CHECK(NRF_REGULATORS_HAS_POFCON_VDDH) || \
-    defined(__NRFX_DOXYGEN__)
+#if NRF_POWER_HAS_POFCON_VDDH || (defined(REGULATORS_PRESENT) && NRF_REGULATORS_HAS_POF_VDDH) \
+    || defined(__NRFX_DOXYGEN__)
 /** @brief Symbol indicating whether the power failure comparator for VDDH is supported. */
 #define NRFX_POWER_SUPPORTS_POFCON_VDDH 1
 #else
 #define NRFX_POWER_SUPPORTS_POFCON_VDDH 0
 #endif
 
-#if NRF_POWER_HAS_DCDCEN_VDDH || NRFX_CHECK(NRF_REGULATORS_HAS_DCDCEN_VDDH) || \
-    defined(__NRFX_DOXYGEN__)
+#if NRF_POWER_HAS_DCDCEN_VDDH || (defined(REGULATORS_PRESENT) && NRF_REGULATORS_HAS_VREG_HIGH) \
+    || defined(__NRFX_DOXYGEN__)
 /** @brief Symbol indicating whether the VDDH regulator is supported. */
 #define NRFX_POWER_SUPPORTS_DCDCEN_VDDH 1
 #else
@@ -72,13 +79,17 @@ extern "C" {
 #endif
 
 /**
- * @brief Power mode possible configurations
+ * @brief Sub-power mode possible configurations
  */
 typedef enum
 {
-    NRFX_POWER_MODE_CONSTLAT, /**< Constant latency mode */
-    NRFX_POWER_MODE_LOWPWR    /**< Low power mode        */
-}nrfx_power_mode_t;
+#if NRF_POWER_HAS_CONST_LATENCY || defined(__NRFX_DOXYGEN__)
+    NRFX_POWER_MODE_CONSTLAT, ///< Constant Latency mode.
+#endif
+#if NRF_POWER_HAS_LOW_POWER || defined(__NRFX_DOXYGEN__)
+    NRFX_POWER_MODE_LOWPWR    ///< Low Power mode.
+#endif
+} nrfx_power_mode_t;
 
 #if NRF_POWER_HAS_SLEEPEVT || defined(__NRFX_DOXYGEN__)
 /**
@@ -245,8 +256,8 @@ nrfx_power_usb_event_handler_t nrfx_power_usb_handler_get(void);
  *
  * @param[in] p_config Pointer to the structure with the initial configuration.
  *
- * @retval NRFX_SUCCESS                   Successfully initialized.
- * @retval NRFX_ERROR_ALREADY_INITIALIZED Module was already initialized.
+ * @retval NRFX_SUCCESS       Successfully initialized.
+ * @retval NRFX_ERROR_ALREADY Module was already initialized.
  */
 nrfx_err_t nrfx_power_init(nrfx_power_config_t const * p_config);
 
@@ -258,6 +269,14 @@ nrfx_err_t nrfx_power_init(nrfx_power_config_t const * p_config);
  * @sa nrfx_power_init
  */
 void nrfx_power_uninit(void);
+
+/**
+ * @brief Function for checking if the power module driver is initialized.
+ *
+ * @retval true  Driver is already initialized.
+ * @retval false Driver is not initialized.
+ */
+bool nrfx_power_init_check(void);
 
 #if NRFX_POWER_SUPPORTS_POFCON
 /**
@@ -327,6 +346,39 @@ void nrfx_power_sleepevt_disable(void);
  */
 void nrfx_power_sleepevt_uninit(void);
 #endif /* NRF_POWER_HAS_SLEEPEVT */
+
+#if (NRF_POWER_HAS_CONST_LATENCY && NRF_POWER_HAS_LOW_POWER) || defined(__NRFX_DOXYGEN__)
+/**
+ * @brief Function for requesting Constant Latency sub-power mode.
+ *
+ * @note This function uses a reference counter. As a result, if it is called more than once,
+ *       the function @ref nrfx_power_constlat_mode_free() needs to be called the same number of
+ *       times to change the mode to Low Power.
+ *
+ * @retval NRFX_SUCCESS       The sub-power mode was successfully changed to Constant Latency.
+ * @retval NRFX_ERROR_ALREADY Constant Latency mode was already requested and it is the current sub-power mode.
+ */
+nrfx_err_t nrfx_power_constlat_mode_request(void);
+
+/**
+ * @brief Function for freeing Constant Latency sub-power mode.
+ *
+ * @note This function uses a reference counter. As a result, it needs to be called the same number
+ *       of times as the @ref nrfx_power_constlat_mode_request() function to change the mode back
+ *       to Low Power.
+ *
+ * @retval NRFX_SUCCESS    The sub-power mode was successfully changed to Low Power.
+ * @retval NRFX_ERROR_BUSY The sub-power mode was not changed due to multiple calls to @ref nrfx_power_constlat_mode_request.
+ */
+nrfx_err_t nrfx_power_constlat_mode_free(void);
+
+/**
+ * @brief Function for getting the current sub-power mode.
+ *
+ * @return Current sub-power mode.
+ */
+nrfx_power_mode_t nrfx_power_mode_get(void);
+#endif
 
 #if NRF_POWER_HAS_USBREG || defined(__NRFX_DOXYGEN__)
 /**

@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2010 - 2018, Nordic Semiconductor ASA All rights reserved.
+Copyright (c) 2010 - 2024, Nordic Semiconductor ASA All rights reserved.
+
+SPDX-License-Identifier: BSD-3-Clause
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -37,6 +39,8 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Clock Peripheral */
 #define CLOCK_PRESENT
 #define CLOCK_COUNT 1
+
+#define CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT
 
 /* Power Peripheral */
 #define POWER_PRESENT
@@ -84,17 +88,17 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define IPC_CH_NUM 16
 #define IPC_CONF_NUM 16
-#define IPC_GPMEM_NUM 4
+#define IPC_GPMEM_NUM 2
 
 /* GPIO */
 #define GPIO_PRESENT
 #define GPIO_COUNT 2
 
 #define P0_PIN_NUM 32
-#define P1_PIN_NUM 12
+#define P1_PIN_NUM 16
 
 #define P0_FEATURE_PINS_PRESENT 0xFFFFFFFFUL
-#define P1_FEATURE_PINS_PRESENT 0x00000FFFUL
+#define P1_FEATURE_PINS_PRESENT 0x0000FFFFUL
 
 /* NFC Tag */
 #define NFCT_PRESENT
@@ -103,11 +107,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #define NFCT_EASYDMA_MAXCNT_SIZE 9
 
 /* Distributed Peripheral to Peripheral Interconnect */
-#define DPPI_PRESENT
-#define DPPI_COUNT 1
+#define DPPIC_PRESENT
+#define DPPIC_COUNT 1
 
-#define DPPI_CH_NUM 32
-#define DPPI_GROUP_NUM 6
+#define DPPIC_CH_NUM 32
+#define DPPIC_GROUP_NUM 6
 
 /* Event Generator Unit */
 #define EGU_PRESENT
@@ -284,6 +288,8 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Secure Peripheral Unit */
 #define SPU_PRESENT
 #define SPU_COUNT 1
+
+#define SPU_RAMREGION_SIZE 0x2000ul
 
 /* Inter-IC Sound Interface */
 #define I2S_PRESENT

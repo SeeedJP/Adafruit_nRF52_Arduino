@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2015 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -33,7 +35,7 @@
 #define NRFX_PDM_H__
 
 #include <nrfx.h>
-#include <hal/nrf_pdm.h>
+#include <haly/nrfy_pdm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,8 +71,8 @@ typedef struct
 {
     nrf_pdm_mode_t    mode;               ///< Interface operation mode.
     nrf_pdm_edge_t    edge;               ///< Sampling mode.
-    uint8_t           pin_clk;            ///< CLK pin.
-    uint8_t           pin_din;            ///< DIN pin.
+    uint32_t          clk_pin;            ///< CLK pin number.
+    uint32_t          din_pin;            ///< DIN pin number.
     nrf_pdm_freq_t    clock_freq;         ///< Clock frequency.
     nrf_pdm_gain_t    gain_l;             ///< Left channel gain.
     nrf_pdm_gain_t    gain_r;             ///< Right channel gain.
@@ -81,24 +83,21 @@ typedef struct
 #if NRF_PDM_HAS_MCLKCONFIG
     nrf_pdm_mclksrc_t mclksrc;            ///< Master clock source selection.
 #endif
+    bool              skip_gpio_cfg;      ///< Skip GPIO configuration of pins.
+                                          /**< When set to true, the driver does not modify
+                                           *   any GPIO parameters of the used pins. Those
+                                           *   parameters are supposed to be configured
+                                           *   externally before the driver is initialized. */
+    bool              skip_psel_cfg;      ///< Skip pin selection configuration.
+                                          /**< When set to true, the driver does not modify
+                                           *   pin select registers in the peripheral.
+                                           *   Those registers are supposed to be set up
+                                           *   externally before the driver is initialized.
+                                           *   @note When both GPIO configuration and pin
+                                           *   selection are to be skipped, the structure
+                                           *   fields that specify pins can be omitted,
+                                           *   as they are ignored anyway. */
 } nrfx_pdm_config_t;
-
-
-#if NRF_PDM_HAS_RATIO_CONFIG || defined(__NRFX_DOXYGEN__)
-    /** @brief PDM additional ratio configuration. */
-    #define NRFX_PDM_DEFAULT_EXTENDED_RATIO_CONFIG \
-        .ratio = NRF_PDM_RATIO_64X,
-#else
-    #define NRFX_PDM_DEFAULT_EXTENDED_RATIO_CONFIG
-#endif
-
-#if NRF_PDM_HAS_MCLKCONFIG || defined(__NRFX_DOXYGEN__)
-    /** @brief PDM additional master clock source configuration. */
-    #define NRFX_PDM_DEFAULT_EXTENDED_MCLKSRC_CONFIG \
-        .mclksrc = NRF_PDM_MCLKSRC_PCLK32M,
-#else
-    #define NRFX_PDM_DEFAULT_EXTENDED_MCLKSRC_CONFIG
-#endif
 
 /**
  * @brief PDM driver default configuration.
@@ -116,14 +115,16 @@ typedef struct
 {                                                               \
     .mode               = NRF_PDM_MODE_MONO,                    \
     .edge               = NRF_PDM_EDGE_LEFTFALLING,             \
-    .pin_clk            = _pin_clk,                             \
-    .pin_din            = _pin_din,                             \
+    .clk_pin            = _pin_clk,                             \
+    .din_pin            = _pin_din,                             \
     .clock_freq         = NRF_PDM_FREQ_1032K,                   \
     .gain_l             = NRF_PDM_GAIN_DEFAULT,                 \
     .gain_r             = NRF_PDM_GAIN_DEFAULT,                 \
     .interrupt_priority = NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY, \
-    NRFX_PDM_DEFAULT_EXTENDED_RATIO_CONFIG                      \
-    NRFX_PDM_DEFAULT_EXTENDED_MCLKSRC_CONFIG                    \
+    NRFX_COND_CODE_1(NRF_PDM_HAS_RATIO_CONFIG,                  \
+                     (.ratio = NRF_PDM_RATIO_64X,), ())         \
+    NRFX_COND_CODE_1(NRF_PDM_HAS_MCLKCONFIG,                    \
+                     (.mclksrc = NRF_PDM_MCLKSRC_PCLK32M,), ()) \
 }
 
 /**
@@ -144,11 +145,25 @@ typedef void (*nrfx_pdm_event_handler_t)(nrfx_pdm_evt_t const * p_evt);
  * @param[in] event_handler Event handler provided by the user. Cannot be NULL.
  *
  * @retval NRFX_SUCCESS             Initialization was successful.
+ * @retval NRFX_ERROR_ALREADY       The driver is already initialized.
  * @retval NRFX_ERROR_INVALID_STATE The driver is already initialized.
+ *                                  Deprecated - use @ref NRFX_ERROR_ALREADY instead.
  * @retval NRFX_ERROR_INVALID_PARAM Invalid configuration was specified.
  */
 nrfx_err_t nrfx_pdm_init(nrfx_pdm_config_t const * p_config,
                          nrfx_pdm_event_handler_t  event_handler);
+
+/**
+ * @brief Function for reconfiguring the PDM interface.
+ *
+ * @param[in] p_config Pointer to the structure with the configuration.
+ *
+ * @retval NRFX_SUCCESS             Reconfiguration was successful.
+ * @retval NRFX_ERROR_BUSY          There is ongoing sampling and driver cannot be reconfigured.
+ * @retval NRFX_ERROR_INVALID_STATE The driver is not initialized.
+ * @retval NRFX_ERROR_INVALID_PARAM Invalid configuration was specified.
+ */
+nrfx_err_t nrfx_pdm_reconfigure(nrfx_pdm_config_t const * p_config);
 
 /**
  * @brief Function for uninitializing the PDM interface.
@@ -156,6 +171,14 @@ nrfx_err_t nrfx_pdm_init(nrfx_pdm_config_t const * p_config,
  * This function stops PDM sampling, if it is in progress.
  */
 void nrfx_pdm_uninit(void);
+
+/**
+ * @brief Function for checking if the PDM interface is initialized.
+ *
+ * @retval true  Interface is already initialized.
+ * @retval false Interface is not initialized.
+ */
+bool nrfx_pdm_init_check(void);
 
 /**
  * @brief Function for getting the address of a PDM interface task.

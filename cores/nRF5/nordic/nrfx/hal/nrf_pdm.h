@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2015 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2015 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,7 +39,7 @@
 extern "C" {
 #endif
 
-#ifndef NRF_PDM0
+#if !defined(NRF_PDM0) && defined(NRF_PDM)
 #define NRF_PDM0 NRF_PDM
 #endif
 
@@ -62,6 +64,21 @@ extern "C" {
 #define NRF_PDM_HAS_RATIO_CONFIG 0
 #endif
 
+#if defined(PDM_DMA_PTR_PTR_Msk) || defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether dedicated DMA register is present. */
+#define NRF_PDM_HAS_DMA_REG 1
+#else
+#define NRF_PDM_HAS_DMA_REG 0
+#endif
+
+#if (defined(PDM_TASKS_DMA_START_START_Msk) && defined(PDM_EVENTS_DMA_END_END_Msk)) || \
+    defined(__NRFX_DOXYGEN__)
+/** @brief Symbol indicating whether PDM DMA tasks and events are present. */
+#define NRF_PDM_HAS_DMA_TASKS_EVENTS 1
+#else
+#define NRF_PDM_HAS_DMA_TASKS_EVENTS 0
+#endif
+
 /** @brief Minimum value of PDM gain. */
 #define NRF_PDM_GAIN_MINIMUM  0x00
 /** @brief Default value of PDM gain. */
@@ -76,8 +93,13 @@ typedef uint8_t nrf_pdm_gain_t;
 /** @brief PDM tasks. */
 typedef enum
 {
-    NRF_PDM_TASK_START = offsetof(NRF_PDM_Type, TASKS_START), ///< Starts continuous PDM transfer.
-    NRF_PDM_TASK_STOP  = offsetof(NRF_PDM_Type, TASKS_STOP)   ///< Stops PDM transfer.
+#if NRF_PDM_HAS_DMA_TASKS_EVENTS
+    NRF_PDM_TASK_START = offsetof(NRF_PDM_Type, TASKS_DMA.START), ///< Starts continuous PDM transfer.
+    NRF_PDM_TASK_STOP  = offsetof(NRF_PDM_Type, TASKS_DMA.STOP),  ///< Stops PDM transfer.
+#else
+    NRF_PDM_TASK_START = offsetof(NRF_PDM_Type, TASKS_START),     ///< Starts continuous PDM transfer.
+    NRF_PDM_TASK_STOP  = offsetof(NRF_PDM_Type, TASKS_STOP),      ///< Stops PDM transfer.
+#endif
 } nrf_pdm_task_t;
 
 /** @brief PDM events. */
@@ -85,7 +107,11 @@ typedef enum
 {
     NRF_PDM_EVENT_STARTED = offsetof(NRF_PDM_Type, EVENTS_STARTED), ///< PDM transfer is started.
     NRF_PDM_EVENT_STOPPED = offsetof(NRF_PDM_Type, EVENTS_STOPPED), ///< PDM transfer is finished.
-    NRF_PDM_EVENT_END     = offsetof(NRF_PDM_Type, EVENTS_END)      ///< The PDM has written the last sample specified by SAMPLE.MAXCNT (or the last sample after a STOP task has been received) to Data RAM.
+#if NRF_PDM_HAS_DMA_TASKS_EVENTS
+    NRF_PDM_EVENT_END     = offsetof(NRF_PDM_Type, EVENTS_DMA.END), ///< The PDM has written the last sample specified by MAXCNT (or the last sample after a STOP task has been received) to Data RAM.
+#else
+    NRF_PDM_EVENT_END     = offsetof(NRF_PDM_Type, EVENTS_END),     ///< The PDM has written the last sample specified by MAXCNT (or the last sample after a STOP task has been received) to Data RAM.
+#endif
 } nrf_pdm_event_t;
 
 /** @brief PDM interrupt masks. */
@@ -93,7 +119,11 @@ typedef enum
 {
     NRF_PDM_INT_STARTED = PDM_INTENSET_STARTED_Msk, ///< Interrupt on EVENTS_STARTED event.
     NRF_PDM_INT_STOPPED = PDM_INTENSET_STOPPED_Msk, ///< Interrupt on EVENTS_STOPPED event.
+#if NRF_PDM_HAS_DMA_TASKS_EVENTS
+    NRF_PDM_INT_END     = PDM_INTENSET_DMAEND_Msk   ///< Interrupt on EVENTS_END event.
+#else
     NRF_PDM_INT_END     = PDM_INTENSET_END_Msk      ///< Interrupt on EVENTS_END event.
+#endif
 } nrf_pdm_int_mask_t;
 
 /** @brief PDM clock frequency. */
@@ -200,6 +230,7 @@ NRF_STATIC_INLINE uint32_t nrf_pdm_event_address_get(NRF_PDM_Type const * p_reg,
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be enabled.
+ *                  Use @ref nrf_pdm_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_pdm_int_enable(NRF_PDM_Type * p_reg, uint32_t mask);
 
@@ -208,6 +239,7 @@ NRF_STATIC_INLINE void nrf_pdm_int_enable(NRF_PDM_Type * p_reg, uint32_t mask);
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be checked.
+ *                  Use @ref nrf_pdm_int_mask_t values for bit masking.
  *
  * @return Mask of enabled interrupts.
  */
@@ -218,6 +250,7 @@ NRF_STATIC_INLINE uint32_t nrf_pdm_int_enable_check(NRF_PDM_Type const * p_reg, 
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
  * @param[in] mask  Mask of interrupts to be disabled.
+ *                  Use @ref nrf_pdm_int_mask_t values for bit masking.
  */
 NRF_STATIC_INLINE void nrf_pdm_int_disable(NRF_PDM_Type * p_reg, uint32_t mask);
 
@@ -342,6 +375,24 @@ NRF_STATIC_INLINE void nrf_pdm_psel_connect(NRF_PDM_Type * p_reg,
                                             uint32_t       psel_din);
 
 /**
+ * @brief Function for getting the CLK pin selection.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @return CLK pin selection;
+ */
+NRF_STATIC_INLINE uint32_t nrf_pdm_clk_pin_get(NRF_PDM_Type const * p_reg);
+
+/**
+ * @brief Function for getting the DIN pin selection.
+ *
+ * @param[in] p_reg Pointer to the structure of registers of the peripheral.
+ *
+ * @return DIN pin selection;
+ */
+NRF_STATIC_INLINE uint32_t nrf_pdm_din_pin_get(NRF_PDM_Type const * p_reg);
+
+/**
  * @brief Function for disconnecting the PDM pins.
  *
  * @param[in] p_reg Pointer to the structure of registers of the peripheral.
@@ -420,27 +471,24 @@ NRF_STATIC_INLINE void nrf_pdm_task_trigger(NRF_PDM_Type * p_reg, nrf_pdm_task_t
 
 NRF_STATIC_INLINE uint32_t nrf_pdm_task_address_get(NRF_PDM_Type const * p_reg, nrf_pdm_task_t task)
 {
-    return (uint32_t)((uint8_t *)p_reg + (uint32_t)task);
+    return nrf_task_event_address_get(p_reg, task);
 }
 
 NRF_STATIC_INLINE bool nrf_pdm_event_check(NRF_PDM_Type const * p_reg, nrf_pdm_event_t event)
 {
-    return (bool)*(volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event);
+    return nrf_event_check(p_reg, event);
 }
 
 NRF_STATIC_INLINE void nrf_pdm_event_clear(NRF_PDM_Type * p_reg, nrf_pdm_event_t event)
 {
     *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event)) = 0x0UL;
-#if __CORTEX_M == 0x04
-    volatile uint32_t dummy = *((volatile uint32_t *)((uint8_t *)p_reg + (uint32_t)event));
-    (void)dummy;
-#endif
+    nrf_event_readback((uint8_t *)p_reg + (uint32_t)event);
 }
 
 NRF_STATIC_INLINE uint32_t nrf_pdm_event_address_get(NRF_PDM_Type const * p_reg,
                                                      nrf_pdm_event_t      event)
 {
-    return (uint32_t)((uint8_t *)p_reg + (uint32_t)event);
+    return nrf_task_event_address_get(p_reg, event);
 }
 
 NRF_STATIC_INLINE void nrf_pdm_int_enable(NRF_PDM_Type * p_reg, uint32_t mask)
@@ -464,7 +512,7 @@ NRF_STATIC_INLINE void nrf_pdm_subscribe_set(NRF_PDM_Type * p_reg,
                                              uint8_t        channel)
 {
     *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) task + 0x80uL)) =
-            ((uint32_t)channel | PDM_SUBSCRIBE_START_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_pdm_subscribe_clear(NRF_PDM_Type * p_reg, nrf_pdm_task_t task)
@@ -477,7 +525,7 @@ NRF_STATIC_INLINE void nrf_pdm_publish_set(NRF_PDM_Type *  p_reg,
                                            uint8_t         channel)
 {
     *((volatile uint32_t *) ((uint8_t *) p_reg + (uint32_t) event + 0x80uL)) =
-            ((uint32_t)channel | PDM_PUBLISH_STARTED_EN_Msk);
+            ((uint32_t)channel | NRF_SUBSCRIBE_PUBLISH_ENABLE);
 }
 
 NRF_STATIC_INLINE void nrf_pdm_publish_clear(NRF_PDM_Type * p_reg, nrf_pdm_event_t event)
@@ -510,8 +558,8 @@ NRF_STATIC_INLINE void nrf_pdm_mode_set(NRF_PDM_Type * p_reg,
 }
 
 NRF_STATIC_INLINE void nrf_pdm_mode_get(NRF_PDM_Type const * p_reg,
-                                        nrf_pdm_mode_t * p_pdm_mode,
-                                        nrf_pdm_edge_t * p_pdm_edge)
+                                        nrf_pdm_mode_t *     p_pdm_mode,
+                                        nrf_pdm_edge_t *     p_pdm_edge)
 {
     uint32_t mode = p_reg->MODE;
     *p_pdm_mode = (nrf_pdm_mode_t)((mode & PDM_MODE_OPERATION_Msk ) >> PDM_MODE_OPERATION_Pos);
@@ -537,6 +585,16 @@ NRF_STATIC_INLINE void nrf_pdm_psel_connect(NRF_PDM_Type * p_reg,
     p_reg->PSEL.DIN = psel_din;
 }
 
+NRF_STATIC_INLINE uint32_t nrf_pdm_clk_pin_get(NRF_PDM_Type const * p_reg)
+{
+    return p_reg->PSEL.CLK;
+}
+
+NRF_STATIC_INLINE uint32_t nrf_pdm_din_pin_get(NRF_PDM_Type const * p_reg)
+{
+    return p_reg->PSEL.DIN;
+}
+
 NRF_STATIC_INLINE void nrf_pdm_psel_disconnect(NRF_PDM_Type * p_reg)
 {
     p_reg->PSEL.CLK = ((PDM_PSEL_CLK_CONNECT_Disconnected << PDM_PSEL_CLK_CONNECT_Pos)
@@ -557,19 +615,28 @@ NRF_STATIC_INLINE void nrf_pdm_gain_get(NRF_PDM_Type const * p_reg,
                                         nrf_pdm_gain_t *     p_gain_l,
                                         nrf_pdm_gain_t *     p_gain_r)
 {
-    *p_gain_l = p_reg->GAINL;
-    *p_gain_r = p_reg->GAINR;
+    *p_gain_l = (nrf_pdm_gain_t)p_reg->GAINL;
+    *p_gain_r = (nrf_pdm_gain_t)p_reg->GAINR;
 }
 
 NRF_STATIC_INLINE void nrf_pdm_buffer_set(NRF_PDM_Type * p_reg, uint32_t * p_buffer, uint32_t num)
 {
+#if NRF_PDM_HAS_DMA_REG
+    p_reg->DMA.PTR = (uint32_t)p_buffer;
+    p_reg->DMA.MAXCNT = num;
+#else
     p_reg->SAMPLE.PTR = (uint32_t)p_buffer;
     p_reg->SAMPLE.MAXCNT = num;
+#endif
 }
 
 NRF_STATIC_INLINE uint32_t * nrf_pdm_buffer_get(NRF_PDM_Type const * p_reg)
 {
+#if NRF_PDM_HAS_DMA_REG
+    return (uint32_t *)p_reg->DMA.PTR;
+#else
     return (uint32_t *)p_reg->SAMPLE.PTR;
+#endif
 }
 
 #if NRF_PDM_HAS_RATIO_CONFIG

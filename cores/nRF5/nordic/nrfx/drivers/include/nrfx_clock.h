@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2016 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2016 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -52,6 +54,7 @@ typedef enum
 {
     NRFX_CLOCK_EVT_HFCLK_STARTED,      ///< HFCLK has been started.
     NRFX_CLOCK_EVT_LFCLK_STARTED,      ///< LFCLK has been started.
+    NRFX_CLOCK_EVT_PLL_STARTED,        ///< PLL has been started.
     NRFX_CLOCK_EVT_CTTO,               ///< Calibration timeout.
     NRFX_CLOCK_EVT_CAL_DONE,           ///< Calibration has been done.
     NRFX_CLOCK_EVT_HFCLKAUDIO_STARTED, ///< HFCLKAUDIO has been started.
@@ -71,10 +74,10 @@ typedef void (*nrfx_clock_event_handler_t)(nrfx_clock_evt_type_t event);
  * After initialization, the module is in power off state (clocks are not started).
  *
  * @param[in] event_handler Event handler provided by the user.
- *                          Must not be NULL.
+ *                          If not provided, driver works in blocking mode.
  *
- * @retval NRFX_SUCCESS                   The procedure is successful.
- * @retval NRFX_ERROR_ALREADY_INITIALIZED The driver is already initialized.
+ * @retval NRFX_SUCCESS       The procedure is successful.
+ * @retval NRFX_ERROR_ALREADY The driver is already initialized.
  */
 nrfx_err_t nrfx_clock_init(nrfx_clock_event_handler_t  event_handler);
 
@@ -86,6 +89,14 @@ void nrfx_clock_disable(void);
 
 /** @brief Function for uninitializing the clock module. */
 void nrfx_clock_uninit(void);
+
+/**
+ * @brief Function for checking if the clock driver is initialized.
+ *
+ * @retval true  Driver is already initialized.
+ * @retval false Driver is not initialized.
+ */
+bool nrfx_clock_init_check(void);
 
 /**
  * @brief Function for starting the specified clock domain.
@@ -106,17 +117,19 @@ void nrfx_clock_stop(nrf_clock_domain_t domain);
  *
  * XTAL source is assumed for domains with multiple sources.
  *
- * @param[in]  domain  Clock domain.
- * @param[out] clk_src Clock source that is running. Set to NULL if not needed.
- *                     Ignored for HFCLKAUDIO domain. Typecast it to @ref nrf_clock_lfclk_t for
- *                     LFCLK and @ref nrf_clock_hfclk_t for HFCLK and HFCLK192M.
+ * @param[in]  domain    Clock domain.
+ * @param[out] p_clk_src Pointer to a clock source that is running. Set to NULL if not needed.
+ *                       Ignored for HFCLKAUDIO domain. Variable pointed by @p p_clk_src
+ *                       must be of either @ref nrf_clock_lfclk_t type for LFCLK
+ *                       or @ref nrf_clock_hfclk_t type for HFCLK and HFCLK192M.
  *
  * @retval true  The clock domain is running.
  * @retval false The clock domain is not running.
  */
-NRFX_STATIC_INLINE bool nrfx_clock_is_running(nrf_clock_domain_t domain, void * clk_src);
+NRFX_STATIC_INLINE bool nrfx_clock_is_running(nrf_clock_domain_t domain, void * p_clk_src);
 
-#if NRF_CLOCK_HAS_HFCLK_DIV || NRF_CLOCK_HAS_HFCLK_192M
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT) || NRF_CLOCK_HAS_HFCLK192M || \
+    defined(__NRFX_DOXYGEN__)
 /**
  * @brief Function for setting the specified clock domain divider.
  *
@@ -190,7 +203,7 @@ NRFX_STATIC_INLINE void nrfx_clock_hfclk_stop(void);
 NRFX_STATIC_INLINE bool nrfx_clock_hfclk_is_running(void);
 
 
-#if NRF_CLOCK_HAS_HFCLKAUDIO
+#if NRF_CLOCK_HAS_HFCLKAUDIO || defined(__NRFX_DOXYGEN__)
 /**
  * @brief Function for setting the HFCLKAUDIO configuration.
  *
@@ -215,9 +228,10 @@ NRFX_STATIC_INLINE void nrfx_clock_hfclkaudio_config_set(uint16_t freq_value);
  * @return Current value of FREQ_VALUE for HFCLKAUDIO.
  */
 NRFX_STATIC_INLINE uint16_t nrfx_clock_hfclkaudio_config_get(void);
-
 #endif
 
+#if (NRF_CLOCK_HAS_CALIBRATION && NRFX_CHECK(NRFX_CLOCK_CONFIG_LF_CAL_ENABLED)) || \
+     defined(__NRFX_DOXYGEN__)
 /**
  * @brief Function for starting the calibration of internal LFCLK.
  *
@@ -240,6 +254,8 @@ nrfx_err_t nrfx_clock_calibration_start(void);
  */
 nrfx_err_t nrfx_clock_is_calibrating(void);
 
+#if (NRF_CLOCK_HAS_CALIBRATION_TIMER && NRFX_CHECK(NRFX_CLOCK_CONFIG_CT_ENABLED)) || \
+    defined(__NRFX_DOXYGEN__)
 /**
  * @brief Function for starting calibration timer.
  *
@@ -249,31 +265,36 @@ void nrfx_clock_calibration_timer_start(uint8_t interval);
 
 /** @brief Function for stopping the calibration timer. */
 void nrfx_clock_calibration_timer_stop(void);
+#endif
+#endif /* (NRF_CLOCK_HAS_CALIBRATION && NRFX_CHECK(NRFX_CLOCK_CONFIG_LF_CAL_ENABLED)) || \
+           defined(__NRFX_DOXYGEN__) */
 
-/**@brief Function for returning a requested task address for the clock driver module.
+/**
+ * @brief Function for returning a requested task address for the clock driver module.
  *
  * @param[in] task One of the peripheral tasks.
  *
  * @return Task address.
  */
-NRFX_STATIC_INLINE uint32_t nrfx_clock_ppi_task_addr(nrf_clock_task_t task);
+NRFX_STATIC_INLINE uint32_t nrfx_clock_task_address_get(nrf_clock_task_t task);
 
-/**@brief Function for returning a requested event address for the clock driver module.
+/**
+ * @brief Function for returning a requested event address for the clock driver module.
  *
  * @param[in] event One of the peripheral events.
  *
  * @return Event address.
  */
-NRFX_STATIC_INLINE uint32_t nrfx_clock_ppi_event_addr(nrf_clock_event_t event);
+NRFX_STATIC_INLINE uint32_t nrfx_clock_event_address_get(nrf_clock_event_t event);
 
 #ifndef NRFX_DECLARE_ONLY
 
-#if NRF_CLOCK_HAS_HFCLK_DIV || NRF_CLOCK_HAS_HFCLK_192M
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT) || NRF_CLOCK_HAS_HFCLK192M
 NRFX_STATIC_INLINE nrf_clock_hfclk_div_t nrfx_clock_divider_get(nrf_clock_domain_t domain)
 {
     switch (domain)
     {
-#if NRF_CLOCK_HAS_HFCLK_DIV
+#if defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT)
         case NRF_CLOCK_DOMAIN_HFCLK:
             return nrf_clock_hfclk_div_get(NRF_CLOCK);
 #endif
@@ -283,10 +304,10 @@ NRFX_STATIC_INLINE nrf_clock_hfclk_div_t nrfx_clock_divider_get(nrf_clock_domain
 #endif
         default:
             NRFX_ASSERT(0);
-            return 0;
+            return (nrf_clock_hfclk_div_t)0;
     }
 }
-#endif // NRF_CLOCK_HAS_HFCLK_DIV || NRF_CLOCK_HAS_HFCLK_192M
+#endif // defined(CLOCK_FEATURE_HFCLK_DIVIDE_PRESENT) || NRF_CLOCK_HAS_HFCLK192M
 
 NRFX_STATIC_INLINE void nrfx_clock_lfclk_start(void)
 {
@@ -308,19 +329,19 @@ NRFX_STATIC_INLINE void nrfx_clock_hfclk_stop(void)
     nrfx_clock_stop(NRF_CLOCK_DOMAIN_HFCLK);
 }
 
-NRFX_STATIC_INLINE uint32_t nrfx_clock_ppi_task_addr(nrf_clock_task_t task)
+NRFX_STATIC_INLINE uint32_t nrfx_clock_task_address_get(nrf_clock_task_t task)
 {
     return nrf_clock_task_address_get(NRF_CLOCK, task);
 }
 
-NRFX_STATIC_INLINE uint32_t nrfx_clock_ppi_event_addr(nrf_clock_event_t event)
+NRFX_STATIC_INLINE uint32_t nrfx_clock_event_address_get(nrf_clock_event_t event)
 {
     return nrf_clock_event_address_get(NRF_CLOCK, event);
 }
 
-NRFX_STATIC_INLINE bool nrfx_clock_is_running(nrf_clock_domain_t domain, void * clk_src)
+NRFX_STATIC_INLINE bool nrfx_clock_is_running(nrf_clock_domain_t domain, void * p_clk_src)
 {
-    return nrf_clock_is_running(NRF_CLOCK, domain, clk_src);
+    return nrf_clock_is_running(NRF_CLOCK, domain, p_clk_src);
 }
 
 NRFX_STATIC_INLINE bool nrfx_clock_hfclk_is_running(void)

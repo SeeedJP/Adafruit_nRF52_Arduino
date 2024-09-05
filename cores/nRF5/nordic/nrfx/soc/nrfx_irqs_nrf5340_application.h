@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
+ * Copyright (c) 2019 - 2024, Nordic Semiconductor ASA
  * All rights reserved.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -45,55 +47,58 @@ extern "C" {
 // CLOCK_POWER_IRQn
 #define nrfx_power_clock_irq_handler    CLOCK_POWER_IRQHandler
 
-// SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQn
+// SERIAL0_IRQn
 #if NRFX_CHECK(NRFX_PRS_ENABLED) && NRFX_CHECK(NRFX_PRS_BOX_0_ENABLED)
-#define nrfx_prs_box_0_irq_handler  SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
+#define nrfx_prs_box_0_irq_handler  SERIAL0_IRQHandler
 #else
-#define nrfx_spim_0_irq_handler     SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
-#define nrfx_spis_0_irq_handler     SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
-#define nrfx_twim_0_irq_handler     SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
-#define nrfx_twis_0_irq_handler     SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
-#define nrfx_uarte_0_irq_handler    SPIM0_SPIS0_TWIM0_TWIS0_UARTE0_IRQHandler
+#define nrfx_spim_0_irq_handler     SERIAL0_IRQHandler
+#define nrfx_spis_0_irq_handler     SERIAL0_IRQHandler
+#define nrfx_twim_0_irq_handler     SERIAL0_IRQHandler
+#define nrfx_twis_0_irq_handler     SERIAL0_IRQHandler
+#define nrfx_uarte_0_irq_handler    SERIAL0_IRQHandler
 #endif
 
-// SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQn
+// SERIAL1_IRQn
 #if NRFX_CHECK(NRFX_PRS_ENABLED) && NRFX_CHECK(NRFX_PRS_BOX_1_ENABLED)
-#define nrfx_prs_box_1_irq_handler  SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
+#define nrfx_prs_box_1_irq_handler  SERIAL1_IRQHandler
 #else
-#define nrfx_spim_1_irq_handler     SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
-#define nrfx_spis_1_irq_handler     SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
-#define nrfx_twim_1_irq_handler     SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
-#define nrfx_twis_1_irq_handler     SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
-#define nrfx_uarte_1_irq_handler    SPIM1_SPIS1_TWIM1_TWIS1_UARTE1_IRQHandler
+#define nrfx_spim_1_irq_handler     SERIAL1_IRQHandler
+#define nrfx_spis_1_irq_handler     SERIAL1_IRQHandler
+#define nrfx_twim_1_irq_handler     SERIAL1_IRQHandler
+#define nrfx_twis_1_irq_handler     SERIAL1_IRQHandler
+#define nrfx_uarte_1_irq_handler    SERIAL1_IRQHandler
 #endif
 
 // SPIM4_IRQn
 #define nrfx_spim_4_irq_handler     SPIM4_IRQHandler
 
-// SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQn
+// SERIAL2_IRQn
 #if NRFX_CHECK(NRFX_PRS_ENABLED) && NRFX_CHECK(NRFX_PRS_BOX_2_ENABLED)
-#define nrfx_prs_box_2_irq_handler  SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
+#define nrfx_prs_box_2_irq_handler  SERIAL2_IRQHandler
 #else
-#define nrfx_spim_2_irq_handler     SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
-#define nrfx_spis_2_irq_handler     SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
-#define nrfx_twim_2_irq_handler     SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
-#define nrfx_twis_2_irq_handler     SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
-#define nrfx_uarte_2_irq_handler    SPIM2_SPIS2_TWIM2_TWIS2_UARTE2_IRQHandler
+#define nrfx_spim_2_irq_handler     SERIAL2_IRQHandler
+#define nrfx_spis_2_irq_handler     SERIAL2_IRQHandler
+#define nrfx_twim_2_irq_handler     SERIAL2_IRQHandler
+#define nrfx_twis_2_irq_handler     SERIAL2_IRQHandler
+#define nrfx_uarte_2_irq_handler    SERIAL2_IRQHandler
 #endif
 
-// SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQn
+// SERIAL3_IRQn
 #if NRFX_CHECK(NRFX_PRS_ENABLED) && NRFX_CHECK(NRFX_PRS_BOX_3_ENABLED)
-#define nrfx_prs_box_3_irq_handler  SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
+#define nrfx_prs_box_3_irq_handler  SERIAL3_IRQHandler
 #else
-#define nrfx_spim_3_irq_handler     SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
-#define nrfx_spis_3_irq_handler     SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
-#define nrfx_twim_3_irq_handler     SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
-#define nrfx_twis_3_irq_handler     SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
-#define nrfx_uarte_3_irq_handler    SPIM3_SPIS3_TWIM3_TWIS3_UARTE3_IRQHandler
+#define nrfx_spim_3_irq_handler     SERIAL3_IRQHandler
+#define nrfx_spis_3_irq_handler     SERIAL3_IRQHandler
+#define nrfx_twim_3_irq_handler     SERIAL3_IRQHandler
+#define nrfx_twis_3_irq_handler     SERIAL3_IRQHandler
+#define nrfx_uarte_3_irq_handler    SERIAL3_IRQHandler
 #endif
 
 // GPIOTE0_IRQn
-#define nrfx_gpiote_irq_handler     GPIOTE_IRQHandler
+#define nrfx_gpiote_0_irq_handler   GPIOTE0_IRQHandler
+
+// GPIOTE1_IRQn
+#define nrfx_gpiote_1_irq_handler   GPIOTE1_IRQHandler
 
 // SAADC_IRQn
 #define nrfx_saadc_irq_handler      SAADC_IRQHandler
@@ -161,7 +166,7 @@ extern "C" {
 #define nrfx_pdm_irq_handler        PDM0_IRQHandler
 
 // I2S0_IRQn
-#define nrfx_i2s_irq_handler        I2S0_IRQHandler
+#define nrfx_i2s_0_irq_handler      I2S0_IRQHandler
 
 // IPC_IRQn
 #define nrfx_ipc_irq_handler        IPC_IRQHandler
@@ -175,9 +180,10 @@ extern "C" {
 // GPIOTE1_IRQn
 
 // QDEC0_IRQn
-#define nrfx_qdec_irq_handler       QDEC_IRQHandler
+#define nrfx_qdec_0_irq_handler     QDEC0_IRQHandler
 
 // QDEC1_IRQn
+#define nrfx_qdec_1_irq_handler     QDEC1_IRQHandler
 
 // USBD_IRQn
 #define nrfx_usbd_irq_handler       USBD_IRQHandler
