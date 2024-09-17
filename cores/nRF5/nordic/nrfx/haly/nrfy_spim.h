@@ -835,7 +835,7 @@ uint32_t __nrfy_internal_spim_events_process(NRF_SPIM_Type *               p_reg
     bool invalidated = false;
     if (__nrfy_internal_spim_event_handle(p_reg, mask, NRF_SPIM_EVENT_END, &evt_mask) && p_xfer)
     {
-        size_t size = stop ? nrf_spim_rx_amount_get(p_reg) : p_xfer->rx_length;
+        [[maybe_unused]] size_t size = stop ? nrf_spim_rx_amount_get(p_reg) : p_xfer->rx_length;
         NRFY_CACHE_INV(p_xfer->p_rx_buffer, size);
         invalidated = true;
     }
@@ -843,7 +843,7 @@ uint32_t __nrfy_internal_spim_events_process(NRF_SPIM_Type *               p_reg
     if (__nrfy_internal_spim_event_handle(p_reg, mask, NRF_SPIM_EVENT_ENDRX, &evt_mask) &&
         p_xfer && !invalidated)
     {
-        size_t size = stop ? nrf_spim_rx_amount_get(p_reg) : p_xfer->rx_length;
+        [[maybe_unused]] size_t size = stop ? nrf_spim_rx_amount_get(p_reg) : p_xfer->rx_length;
         NRFY_CACHE_INV(p_xfer->p_rx_buffer, size);
     }
 
