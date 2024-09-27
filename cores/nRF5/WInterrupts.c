@@ -238,6 +238,9 @@ void GPIOTE_IRQHandler()
     if ( 0 == (enabledInterruptMask & (1 << ch))) continue;
     if ( 0 == NRF_GPIOTE->EVENTS_IN[ch]) continue;
 
+    // clear the event
+    NRF_GPIOTE->EVENTS_IN[ch] = 0;
+
     // If the event was set and interrupts are enabled,
     // call the callback function only if it exists,
     // but ALWAYS clear the event to prevent an interrupt storm.
@@ -249,9 +252,6 @@ void GPIOTE_IRQHandler()
         callbacksInt[ch]();
       }
     }
-
-    // clear the event
-    NRF_GPIOTE->EVENTS_IN[ch] = 0;
   }
 #if __CORTEX_M == 0x04
   // See note at nRF52840_PS_v1.1.pdf section 6.1.8 ("interrupt clearing")
