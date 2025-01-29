@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <memory>
 #include "Arduino.h"
 
 #include "Print.h"
@@ -189,14 +190,17 @@ size_t Print::println(const Printable& x)
 
 size_t Print::printf(const char * format, ...)
 {
-  char buf[256];
-  int len;
-
   va_list ap;
   va_start(ap, format);
 
-  len = vsnprintf(buf, 256, format, ap);
-  this->write(buf, len);
+  int len = vsnprintf(nullptr, 0, format, ap);
+  if (len >= 1) {
+    len = std::min(len, 256);
+
+    std::unique_ptr<char[]> buf = std::make_unique<char[]>(len + 1);
+    vsnprintf(buf.get(), len + 1, format, ap);
+    this->write(buf.get(), len);
+  }
 
   va_end(ap);
   return len;
@@ -226,12 +230,7 @@ size_t Print::printNumber(unsigned long n, uint8_t base)
 
 size_t Print::printFloat(double number, uint8_t digits)
 {
-  char buf[256];
-  size_t s=0;
-
-  s = snprintf(buf, 256, "%.*f", digits, number);
-  s = write(buf, s);
-  return s;
+  return printf("%.*f", digits, number);
 }
 
 size_t Print::printBuffer(uint8_t const buffer[], int len, char delim, int byteline)
