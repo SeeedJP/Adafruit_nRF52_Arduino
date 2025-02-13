@@ -31,7 +31,7 @@ wio_bg770a.build.core=nRF5
 wio_bg770a.build.variant=Seeed_Wio_BG770A
 wio_bg770a.build.usb_manufacturer="Seeed"
 wio_bg770a.build.usb_product="Wio BG770A"
-wio_bg770a.build.extra_flags=-DNRF52840_XXAA {build.flags.usb}
+wio_bg770a.build.extra_flags=-DNRF52840_XXAA -DNRFX_SPIM3_NRF52840_ANOMALY_198_WORKAROUND_ENABLED=1 {build.flags.usb}
 wio_bg770a.build.ldscript=nrf52840_s140_v7.ld
 wio_bg770a.build.vid=0x2886
 wio_bg770a.build.pid=0x8056
