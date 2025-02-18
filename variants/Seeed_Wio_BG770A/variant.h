@@ -138,7 +138,7 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 #define PIN_FERAM_SCK           (19)            // SCLK
 #define PIN_FERAM_WP            (23)            // WP
 #define PIN_FERAM_HOLD          (21)            // HOLD
-#define FERAM_SPI               (NRF_SPIM3)
+#define FERAM_SPI               (NRF_SPIM2)
 
 #define FERAM_DEVICE_CONFIG                   \
     {                                         \
@@ -147,10 +147,10 @@ static const uint8_t SS = PINS_COUNT;           // No connection
         .manufacturer_id = 0x04,              \
         .memory_type = 0x26,                  \
         .capacity = 0x03,                     \
-        .max_clock_speed_mhz = 30,            \
+        .max_clock_speed_mhz = 8,             \
         .quad_enable_bit_mask = 0x00,         \
         .has_sector_protection = false,       \
-        .supports_fast_read = true,           \
+        .supports_fast_read = false,          \
         .supports_qspi = false,               \
         .supports_qspi_writes = false,        \
         .write_status_register_split = false, \
