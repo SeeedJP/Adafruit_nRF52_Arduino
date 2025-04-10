@@ -157,3 +157,5 @@ static const uint8_t SS = PINS_COUNT;           // No connection
         .single_status_byte = true,           \
         .is_fram = true,                      \
     }
+
+#include <PseudoTime.h>
