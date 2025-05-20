@@ -100,6 +100,9 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 #endif // BOARD_VERSION_ES2
 #define PIN_VGROVE_ENABLE       (3)
 
+#define VGROVE_ENABLE_ON       (LOW)
+#define VGROVE_ENABLE_OFF      (HIGH)
+
 ////////////////////////////////////////////////////////////////////////////////
 // Cellular module
 

@@ -98,7 +98,7 @@ void initVariant()
   digitalWrite(PIN_VSYS_3V3_ENABLE, HIGH);
   pinMode(PIN_VSYS_3V3_ENABLE, OUTPUT);
 #endif // BOARD_VERSION_ES2
-  digitalWrite(PIN_VGROVE_ENABLE, HIGH);
+  digitalWrite(PIN_VGROVE_ENABLE, VGROVE_ENABLE_OFF);
   pinMode(PIN_VGROVE_ENABLE, OUTPUT);
 
   // Builtin LEDs
