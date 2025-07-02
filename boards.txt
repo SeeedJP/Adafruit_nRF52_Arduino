@@ -18,8 +18,8 @@ wio_bg770a.upload_port.0.pid=0x8056
 wio_bg770a.upload_port.1.vid=0x2886
 wio_bg770a.upload_port.1.pid=0x0056
 
-## Flash 0x000e_9000 - 0x0002_6000
-wio_bg770a.upload.maximum_size=798720
+## Flash(DFU_IMAGE_MAX_SIZE_BANKED)
+wio_bg770a.upload.maximum_size=397312
 ## RAM   0x2004_0000 - 0x2000_6000
 wio_bg770a.upload.maximum_data_size=237568
 
