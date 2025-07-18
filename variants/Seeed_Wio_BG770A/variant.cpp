@@ -70,7 +70,7 @@ void initVariant()
 #if defined(BOARD_VERSION_ES2)
   digitalWrite(PIN_PWRKEY, LOW);
   pinMode(PIN_PWRKEY, OUTPUT);
-#elif defined(BOARD_VERSION_1_0)
+#elif defined(BOARD_VERSION_1_0) || defined(BOARD_VERSION_1_1)
   digitalWrite(PIN_PWRKEY, HIGH);
   pinMode(PIN_PWRKEY, OUTPUT_S0D1);
   digitalWrite(PIN_RESET_N, HIGH);
@@ -92,12 +92,21 @@ void initVariant()
   pinMode(PIN_FERAM_SI, OUTPUT);
 
   // Power supply
-#ifdef BOARD_VERSION_ES2
+#if defined(BOARD_VERSION_ES2)
   digitalWrite(PIN_DCDC_MODE, LOW); // PFM/PWM mode
   pinMode(PIN_DCDC_MODE, OUTPUT);
   digitalWrite(PIN_VSYS_3V3_ENABLE, HIGH);
   pinMode(PIN_VSYS_3V3_ENABLE, OUTPUT);
-#endif // BOARD_VERSION_ES2
+#elif defined(BOARD_VERSION_1_0)
+// Nothing to do
+#elif defined(BOARD_VERSION_1_1)
+  digitalWrite(PIN_DCDC_MODE, LOW); // PFM/PWM mode
+  pinMode(PIN_DCDC_MODE, OUTPUT);
+  digitalWrite(PIN_DCDC_FSEL, LOW); // Low frequency(1.25MHz)
+  pinMode(PIN_DCDC_FSEL, OUTPUT);
+#else
+#error "Unknown board version"
+#endif
   digitalWrite(PIN_VGROVE_ENABLE, VGROVE_ENABLE_OFF);
   pinMode(PIN_VGROVE_ENABLE, OUTPUT);
 

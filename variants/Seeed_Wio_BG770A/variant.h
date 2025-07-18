@@ -94,14 +94,32 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 ////////////////////////////////////////////////////////////////////////////////
 // Power supply
 
-#ifdef BOARD_VERSION_ES2
+#ifdef BOARD_VERSION_1_1
+#define PIN_VSYS_DIV            (2)             // Analog input for VSYS_DIV
+#endif // BOARD_VERSION_1_1
+
+#if defined(BOARD_VERSION_ES2)
 #define PIN_VSYS_3V3_ENABLE     (2)
 #define PIN_DCDC_MODE           (16)
-#endif // BOARD_VERSION_ES2
-#define PIN_VGROVE_ENABLE       (3)
+#elif defined(BOARD_VERSION_1_0)
+// Nothing to do
+#elif defined(BOARD_VERSION_1_1)
+#define PIN_DCDC_MODE           (15)
+#define PIN_DCDC_FSEL           (16)
+#else
+#error "Unknown board version"
+#endif
 
-#define VGROVE_ENABLE_ON       (LOW)
-#define VGROVE_ENABLE_OFF      (HIGH)
+#define PIN_VGROVE_ENABLE       (3)
+#if defined(BOARD_VERSION_ES2) || defined(BOARD_VERSION_1_0)
+#define VGROVE_ENABLE_ON        (LOW)
+#define VGROVE_ENABLE_OFF       (HIGH)
+#elif defined(BOARD_VERSION_1_1)
+#define VGROVE_ENABLE_ON        (HIGH)
+#define VGROVE_ENABLE_OFF       (LOW)
+#else
+#error "Unknown board version"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cellular module
@@ -113,9 +131,9 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 #define PIN_PWRKEY              (33)            // DO(OC)
 
 // Reset
-#ifdef BOARD_VERSION_1_0
+#if defined(BOARD_VERSION_1_0) || defined(BOARD_VERSION_1_1)
 #define PIN_RESET_N             (47)            // DO(OC)
-#endif // BOARD_VERSION_1_0
+#endif
 
 // Main UART Interface
 #define PIN_MAIN_DTR            (36)            // DO

@@ -41,6 +41,8 @@ wio_bg770a.menu.board_version.1_0=1.0
 wio_bg770a.menu.board_version.1_0.build.board_version=1_0
 wio_bg770a.menu.board_version.es2=ES2
 wio_bg770a.menu.board_version.es2.build.board_version=ES2
+wio_bg770a.menu.board_version.1_1=1.1
+wio_bg770a.menu.board_version.1_1.build.board_version=1_1
 
 # SoftDevice Menu
 wio_bg770a.menu.softdevice.s140v7=S140 7.3.0
