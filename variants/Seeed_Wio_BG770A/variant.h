@@ -78,6 +78,16 @@ static const uint8_t SS = PINS_COUNT;           // No connection
 #define PIN_QSPI_IO3            (PINS_COUNT)
 
 ////////////////////////////////////////////////////////////////////////////////
+// ArduinoRS485
+//  Grove-UART is used for RS485 communication. The DE and RE pins are not connected.
+//  It is recommended to connect and use Grove-RS485 via the Grove-UART connector.
+
+#define RS485_SERIAL_PORT         Serial1
+#define RS485_DEFAULT_TX_PIN      (PIN_SERIAL1_TX)
+#define RS485_DEFAULT_DE_PIN      (-1)          // No connection
+#define RS485_DEFAULT_RE_PIN      (-1)          // No connection
+
+////////////////////////////////////////////////////////////////////////////////
 // Builtin LEDs
 
 #define LED_BUILTIN             (6)             // USER LED
